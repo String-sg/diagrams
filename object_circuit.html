@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Circuit Object Diagram Generator</title>
+  <style>
+    :root {
+      --panel: #f3f4f6;
+      --line: #111827;
+      --muted: #6b7280;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --bg: #ffffff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fafafa;
+      color: #111827;
+      height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+    .sidebar {
+      border-right: 1px solid var(--border);
+      background: var(--panel);
+      padding: 14px;
+      overflow: auto;
+    }
+    .sidebar h1 { margin: 0 0 12px; font-size: 20px; }
+    .sidebar h2 {
+      margin: 18px 0 8px;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+    }
+    .tool-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    button, input { font: inherit; }
+    .tool-btn, .action-btn {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 10px 8px;
+      border-radius: 10px;
+      cursor: pointer;
+      min-height: 44px;
+    }
+    .tool-btn.active, .action-btn.active {
+      outline: 2px solid var(--accent);
+      border-color: var(--accent);
+      background: #eff6ff;
+    }
+    .action-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .action-row.single { grid-template-columns: 1fr; }
+    .field { margin: 8px 0; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .field input[type="number"] {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: white;
+    }
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 10px;
+      background: white;
+      border: 1px solid var(--border);
+      font-size: 13px;
+      line-height: 1.35;
+      color: #374151;
+    }
+    .workspace {
+      position: relative;
+      overflow: hidden;
+      background: #fff;
+    }
+    #app {
+      width: 100%;
+      height: 100%;
+      display: block;
+      background: #fff;
+      cursor: crosshair;
+    }
+    .topbar {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 8px;
+      z-index: 5;
+    }
+    .topbar button {
+      border: 1px solid var(--border);
+      background: white;
+      padding: 9px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    }
+    .kbd {
+      display: inline-block;
+      min-width: 1.4em;
+      padding: 1px 5px;
+      border-radius: 6px;
+      background: #e5e7eb;
+      font-size: 11px;
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <h1>Circuit Object Diagram Generator</h1>
+
+    <h2>Tools</h2>
+    <div class="tool-grid" id="toolGrid">
+      <button class="tool-btn active" data-tool="select">Select / Move</button>
+      <button class="tool-btn" data-tool="wire">Wire</button>
+      <button class="tool-btn" data-tool="bulb">Bulb</button>
+      <button class="tool-btn" data-tool="battery">Battery</button>
+      <button class="tool-btn" data-tool="switch-open">Switch Open</button>
+      <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
+      <button class="tool-btn" data-tool="delete">Delete</button>
+    </div>
+
+    <h2>Placement</h2>
+    <div class="action-row">
+      <button class="action-btn" id="rotateBtn">Rotate 90°</button>
+      <button class="action-btn" id="flipBtn">Flip 180°</button>
+    </div>
+    <div class="action-row single">
+      <button class="action-btn" id="toggleGridBtn">Hide Grid</button>
+    </div>
+
+    <h2>Edit</h2>
+    <div class="action-row">
+      <button class="action-btn" id="undoBtn">Undo</button>
+      <button class="action-btn" id="redoBtn">Redo</button>
+    </div>
+    <div class="action-row single">
+      <button class="action-btn" id="clearBtn">Clear All</button>
+    </div>
+
+    <h2>Export</h2>
+    <div class="action-row single">
+      <button class="action-btn" id="exportBtn">Export PNG</button>
+    </div>
+
+    <div class="status" id="statusBox"></div>
+  </aside>
+
+  <main class="workspace">
+    <div class="topbar">
+      <button id="fitBtn">Centre View</button>
+    </div>
+    <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
+  </main>
+
+  <script>
+    // Bulb is drawn directly in SVG for cleaner snapping and export.
+    const svg = document.getElementById('app');
+    const GRID = 28;
+    const HIT = 10;
+    const WIRE_STROKE = 3;
+
+    const state = {
+      tool: 'select',
+      rotation: 0,
+      showGrid: true,
+      wires: [],
+      components: [],
+      junctionMap: new Map(),
+      selected: null,
+      dragging: null,
+      wirePreview: null,
+      history: [],
+      future: [],
+      nextId: 1,
+      viewport: { width: 1200, height: 800 }
+    };
+
+    const ui = {
+      toolBtns: [...document.querySelectorAll('.tool-btn')],
+      rotateBtn: document.getElementById('rotateBtn'),
+      flipBtn: document.getElementById('flipBtn'),
+      toggleGridBtn: document.getElementById('toggleGridBtn'),
+      statusBox: document.getElementById('statusBox'),
+      undoBtn: document.getElementById('undoBtn'),
+      redoBtn: document.getElementById('redoBtn'),
+      clearBtn: document.getElementById('clearBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      fitBtn: document.getElementById('fitBtn')
+    };
+
+    function deepClone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    }
+
+    function saveHistory() {
+      state.history.push(deepClone({
+        wires: state.wires,
+        components: state.components,
+        nextId: state.nextId
+      }));
+      if (state.history.length > 100) state.history.shift();
+      state.future = [];
+    }
+
+    function restoreSnapshot(snapshot) {
+      state.wires = deepClone(snapshot.wires);
+      state.components = deepClone(snapshot.components);
+      state.nextId = snapshot.nextId;
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    }
+
+    function undo() {
+      if (!state.history.length) return;
+      state.future.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      restoreSnapshot(state.history.pop());
+    }
+
+    function redo() {
+      if (!state.future.length) return;
+      state.history.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      restoreSnapshot(state.future.pop());
+    }
+
+    function snap(v) { return Math.round(v / GRID) * GRID; }
+    function keyPt(x, y) { return `${x},${y}`; }
+
+    function addJunction(x, y) {
+      const key = keyPt(x, y);
+      state.junctionMap.set(key, (state.junctionMap.get(key) || 0) + 1);
+    }
+
+    function segmentPoints(a, b) {
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const steps = gcd(Math.abs(dx), Math.abs(dy)) / GRID;
+      if (steps <= 0) return [a];
+      const stepx = dx / steps;
+      const stepy = dy / steps;
+      const pts = [];
+      for (let i = 0; i <= steps; i++) {
+        pts.push({ x: Math.round(a.x + stepx * i), y: Math.round(a.y + stepy * i) });
+      }
+      return pts;
+    }
+
+    function gcd(a, b) {
+      while (b) [a, b] = [b, a % b];
+      return a || 1;
+    }
+
+    function rebuildJunctions() {
+      state.junctionMap = new Map();
+      for (const wire of state.wires) {
+        for (const p of segmentPoints(wire.a, wire.b)) addJunction(p.x, p.y);
+      }
+      for (const comp of state.components) {
+        getComponentNodes(comp).forEach(p => addJunction(p.x, p.y));
+      }
+    }
+
+    function setTool(tool) {
+      state.tool = tool;
+      state.selected = null;
+      ui.toolBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === tool));
+      render();
+    }
+
+    ui.toolBtns.forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+    ui.rotateBtn.addEventListener('click', () => {
+      state.rotation = (state.rotation + 90) % 360;
+      if (state.selected?.kind === 'component') {
+        saveHistory();
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          comp.rotation = (comp.rotation + 90) % 360;
+          rebuildJunctions();
+          render();
+        }
+      } else {
+        setStatus(`Placement rotation set to ${state.rotation}°.`);
+      }
+    });
+
+    ui.flipBtn.addEventListener('click', () => {
+      state.rotation = (state.rotation + 180) % 360;
+      if (state.selected?.kind === 'component') {
+        saveHistory();
+        const comp = state.components.find(c => c.id === state.selected.id);
+        if (comp) {
+          comp.rotation = (comp.rotation + 180) % 360;
+          rebuildJunctions();
+          render();
+        }
+      } else {
+        setStatus(`Placement flipped 180°.`);
+      }
+    });
+
+    ui.toggleGridBtn.addEventListener('click', () => {
+      state.showGrid = !state.showGrid;
+      ui.toggleGridBtn.textContent = state.showGrid ? 'Hide Grid' : 'Show Grid';
+      render();
+    });
+
+    ui.undoBtn.addEventListener('click', undo);
+    ui.redoBtn.addEventListener('click', redo);
+    ui.clearBtn.addEventListener('click', () => {
+      saveHistory();
+      state.wires = [];
+      state.components = [];
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    });
+    ui.exportBtn.addEventListener('click', exportPNG);
+    ui.fitBtn.addEventListener('click', render);
+
+    document.addEventListener('keydown', (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if (ctrl && ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y')) { e.preventDefault(); redo(); }
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (state.selected) {
+          e.preventDefault();
+          deleteSelected();
+        }
+      }
+      if (e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        ui.rotateBtn.click();
+      }
+      if (e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        ui.flipBtn.click();
+      }
+    });
+
+    function setStatus(html) {
+      ui.statusBox.innerHTML = html;
+    }
+
+    function pointerToSvg(evt) {
+      const pt = svg.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      const transformed = pt.matrixTransform(svg.getScreenCTM().inverse());
+      return { x: transformed.x, y: transformed.y };
+    }
+
+    function nearestGridPoint(p) {
+      return { x: snap(p.x), y: snap(p.y) };
+    }
+
+    function componentSize(type) {
+      if (type === 'bulb') return { w: 92, h: 92 };
+      if (type === 'battery') return { w: 52, h: 92 };
+      return { w: 80, h: 30 };
+    }
+
+    function rotatePoint(x, y, rotation) {
+      const r = ((rotation % 360) + 360) % 360;
+      if (r === 0) return { x, y };
+      if (r === 90) return { x: -y, y: x };
+      if (r === 180) return { x: -x, y: -y };
+      if (r === 270) return { x: y, y: -x };
+      const rad = r * Math.PI / 180;
+      return {
+        x: x * Math.cos(rad) - y * Math.sin(rad),
+        y: x * Math.sin(rad) + y * Math.cos(rad)
+      };
+    }
+
+    function preserveFlipAlignedRotation(currentRotation, axisRotation) {
+      const current = ((currentRotation % 360) + 360) % 360;
+      const axis = ((axisRotation % 360) + 360) % 360;
+      const flipped = current >= 180;
+      return (axis + (flipped ? 180 : 0)) % 360;
+    }
+
+    function getLocalNodes(comp) {
+      if (comp.type === 'bulb') {
+        return [
+          { x: -18, y: 18 },
+          { x: 18, y: 18 },
+          { x: 0, y: 46 }
+        ];
+      }
+      if (comp.type === 'battery') {
+        return [
+          { x: 0, y: -46 },
+          { x: 0, y: 46 }
+        ];
+      }
+      if (comp.type === 'switch') {
+        return [
+          { x: -40, y: 0 },
+          { x: 40, y: 0 }
+        ];
+      }
+      return [];
+    }
+
+    function getComponentNodes(comp) {
+      return getLocalNodes(comp).map(p => {
+        const r = rotatePoint(p.x, p.y, comp.rotation);
+        return { x: comp.x + r.x, y: comp.y + r.y };
+      });
+    }
+
+    function distance(a, b) {
+      return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function pointLineDistance(p, a, b) {
+      const l2 = (b.x-a.x)**2 + (b.y-a.y)**2;
+      if (l2 === 0) return distance(p, a);
+      let t = ((p.x-a.x)*(b.x-a.x) + (p.y-a.y)*(b.y-a.y)) / l2;
+      t = Math.max(0, Math.min(1, t));
+      return distance(p, { x: a.x + t*(b.x-a.x), y: a.y + t*(b.y-a.y) });
+    }
+
+    function getComponentBounds(comp) {
+      const size = componentSize(comp.type);
+      const rotated = comp.rotation % 180 === 0
+        ? { w: size.w + 20, h: size.h + 20 }
+        : { w: size.h + 20, h: size.w + 20 };
+      return { x: comp.x - rotated.w / 2, y: comp.y - rotated.h / 2, w: rotated.w, h: rotated.h };
+    }
+
+    function findHit(p) {
+      for (let i = state.components.length - 1; i >= 0; i--) {
+        const comp = state.components[i];
+        const box = getComponentBounds(comp);
+        if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) {
+          return { kind: 'component', id: comp.id };
+        }
+      }
+      for (let i = state.wires.length - 1; i >= 0; i--) {
+        const wire = state.wires[i];
+        if (pointLineDistance(p, wire.a, wire.b) <= HIT) {
+          return { kind: 'wire', id: wire.id };
+        }
+      }
+      return null;
+    }
+
+    function addComponent(type, pos) {
+      saveHistory();
+      const p = nearestGridPoint(pos);
+      const comp = {
+        id: state.nextId++,
+        type,
+        x: p.x,
+        y: p.y,
+        rotation: state.rotation,
+        variant: type
+      };
+      autoAlignComponent(comp);
+      state.components.push(comp);
+      rebuildJunctions();
+      state.selected = { kind: 'component', id: comp.id };
+      render();
+    }
+
+    function autoAlignComponent(comp) {
+      const near = nearbyWireDirections({ x: comp.x, y: comp.y });
+      if (!near.length) return;
+      const verticalish = near.some(a => Math.abs(Math.cos(a)) < 0.35);
+      const horizontalish = near.some(a => Math.abs(Math.sin(a)) < 0.35);
+      if (comp.type === 'switch') {
+        if (verticalish && !horizontalish) comp.rotation = 90;
+        if (horizontalish && !verticalish) comp.rotation = 0;
+        return;
+      }
+      if (comp.type === 'battery') {
+        if (!verticalish && horizontalish) comp.rotation = preserveFlipAlignedRotation(comp.rotation, 90);
+        if (verticalish) comp.rotation = preserveFlipAlignedRotation(comp.rotation, 0);
+        return;
+      }
+      if (comp.type === 'bulb') {
+        if (verticalish && !horizontalish) comp.rotation = 90;
+        if (horizontalish && !verticalish) comp.rotation = 0;
+      }
+    }
+
+    function nearbyWireDirections(p) {
+      const res = [];
+      for (const wire of state.wires) {
+        if (pointLineDistance(p, wire.a, wire.b) <= GRID * 0.75) {
+          res.push(Math.atan2(wire.b.y - wire.a.y, wire.b.x - wire.a.x));
+        }
+      }
+      return res;
+    }
+
+    function deleteSelected() {
+      if (!state.selected) return;
+      saveHistory();
+      if (state.selected.kind === 'component') {
+        state.components = state.components.filter(c => c.id !== state.selected.id);
+      } else {
+        state.wires = state.wires.filter(w => w.id !== state.selected.id);
+      }
+      state.selected = null;
+      rebuildJunctions();
+      render();
+    }
+
+    svg.addEventListener('pointerdown', (evt) => {
+      const p = pointerToSvg(evt);
+      const snapped = nearestGridPoint(p);
+
+      if (state.tool === 'wire') {
+        state.dragging = { mode: 'wire', start: snapped, current: snapped };
+        state.wirePreview = { a: snapped, b: snapped };
+        render();
+        return;
+      }
+
+      if (state.tool === 'delete') {
+        const hit = findHit(p);
+        if (hit) {
+          state.selected = hit;
+          deleteSelected();
+        }
+        return;
+      }
+
+      if (['bulb', 'battery', 'switch-open', 'switch-closed'].includes(state.tool)) {
+        const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
+        addComponent(type, p);
+        const comp = state.components[state.components.length - 1];
+        if (type === 'switch') comp.variant = state.tool;
+        render();
+        return;
+      }
+
+      const hit = findHit(p);
+      state.selected = hit;
+      if (hit?.kind === 'component' && state.tool === 'select') {
+        const comp = state.components.find(c => c.id === hit.id);
+        state.dragging = {
+          mode: 'move-component',
+          id: comp.id,
+          startX: comp.x,
+          startY: comp.y,
+          moved: false
+        };
+      }
+      render();
+    });
+
+    svg.addEventListener('pointermove', (evt) => {
+      const p = pointerToSvg(evt);
+      const snapped = nearestGridPoint(p);
+      if (!state.dragging) return;
+      if (state.dragging.mode === 'wire') {
+        state.dragging.current = snapped;
+        state.wirePreview = { a: state.dragging.start, b: snapped };
+        render();
+      }
+      if (state.dragging.mode === 'move-component') {
+        const comp = state.components.find(c => c.id === state.dragging.id);
+        if (!comp) return;
+        if (!state.dragging.moved) {
+          saveHistory();
+          state.dragging.moved = true;
+        }
+        comp.x = snapped.x;
+        comp.y = snapped.y;
+        autoAlignComponent(comp);
+        rebuildJunctions();
+        render();
+      }
+    });
+
+    svg.addEventListener('pointerup', () => {
+      if (!state.dragging) return;
+      if (state.dragging.mode === 'wire') {
+        const { start, current } = state.dragging;
+        if (distance(start, current) > 0) {
+          saveHistory();
+          state.wires.push({ id: state.nextId++, a: start, b: current });
+          rebuildJunctions();
+          state.selected = { kind: 'wire', id: state.nextId - 1 };
+        }
+        state.wirePreview = null;
+      }
+      state.dragging = null;
+      render();
+    });
+
+    svg.addEventListener('pointerleave', () => {
+      if (state.dragging?.mode === 'wire') {
+        state.dragging = null;
+        state.wirePreview = null;
+        render();
+      }
+    });
+
+    function render() {
+      state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth;
+      state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight;
+      svg.setAttribute('viewBox', `0 0 ${state.viewport.width} ${state.viewport.height}`);
+      svg.innerHTML = '';
+      if (state.showGrid) drawGrid();
+      drawWires();
+      drawWirePreview();
+      drawComponents();
+    }
+
+    function drawGrid() {
+      const g = make('g');
+      for (let x = 0; x <= state.viewport.width; x += GRID) {
+        g.appendChild(make('line', { x1: x, y1: 0, x2: x, y2: state.viewport.height, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      }
+      for (let y = 0; y <= state.viewport.height; y += GRID) {
+        g.appendChild(make('line', { x1: 0, y1: y, x2: state.viewport.width, y2: y, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      }
+      svg.appendChild(g);
+    }
+
+    function drawWires() {
+      const g = make('g');
+      for (const wire of state.wires) {
+        const isSelected = state.selected?.kind === 'wire' && state.selected.id === wire.id;
+        g.appendChild(make('line', {
+          x1: wire.a.x, y1: wire.a.y, x2: wire.b.x, y2: wire.b.y,
+          stroke: isSelected ? '#2563eb' : '#111827',
+          'stroke-width': isSelected ? WIRE_STROKE + 1 : WIRE_STROKE,
+          'stroke-linecap': 'round'
+        }));
+      }
+      svg.appendChild(g);
+    }
+
+    function drawWirePreview() {
+      if (!state.wirePreview) return;
+      svg.appendChild(make('line', {
+        x1: state.wirePreview.a.x, y1: state.wirePreview.a.y,
+        x2: state.wirePreview.b.x, y2: state.wirePreview.b.y,
+        stroke: '#60a5fa', 'stroke-width': WIRE_STROKE, 'stroke-dasharray': '6 5', 'stroke-linecap': 'round'
+      }));
+    }
+
+    function drawComponents() {
+      for (const comp of state.components) {
+        const selected = state.selected?.kind === 'component' && state.selected.id === comp.id;
+        if (selected) {
+          const box = getComponentBounds(comp);
+          svg.appendChild(make('rect', {
+            x: box.x, y: box.y, width: box.w, height: box.h,
+            rx: 10, ry: 10, fill: 'none', stroke: '#3b82f6', 'stroke-width': 2, 'stroke-dasharray': '5 4'
+          }));
+        }
+        const wrap = make('g', { transform: `translate(${comp.x} ${comp.y}) rotate(${comp.rotation})` });
+        if (comp.type === 'bulb') drawBulbObject(wrap);
+        if (comp.type === 'battery') drawBatteryObject(wrap);
+        if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
+        svg.appendChild(wrap);
+      }
+    }
+
+    function drawBulbObject(g) {
+      g.appendChild(make('path', {
+        d: 'M 0 -34 C -15 -34 -28 -22 -28 -7 C -28 2 -23 11 -16 17 C -12 21 -10 25 -10 29 L 10 29 C 10 25 12 21 16 17 C 23 11 28 2 28 -7 C 28 -22 15 -34 0 -34 Z',
+        fill: 'white', stroke: '#111827', 'stroke-width': 3, 'stroke-linejoin': 'round'
+      }));
+      g.appendChild(make('line', { x1: -8, y1: 6, x2: -5, y2: 14, stroke: '#111827', 'stroke-width': 2.2, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: 8, y1: 6, x2: 5, y2: 14, stroke: '#111827', 'stroke-width': 2.2, 'stroke-linecap': 'round' }));
+      g.appendChild(make('path', { d: 'M -8 6 Q -3 1 0 6 Q 3 11 8 6', fill: 'none', stroke: '#111827', 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+      g.appendChild(make('rect', { x: -9, y: 27, width: 18, height: 6, rx: 2, ry: 2, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
+      g.appendChild(make('rect', { x: -18, y: 15, width: 36, height: 24, rx: 4, ry: 4, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
+      for (const y of [21, 27, 33]) {
+        g.appendChild(make('line', { x1: -15, y1: y, x2: 15, y2: y, stroke: '#111827', 'stroke-width': 2 }));
+      }
+      g.appendChild(make('rect', { x: -7, y: 39, width: 14, height: 7, rx: 2, ry: 2, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
+    }
+
+    function drawBatteryObject(g) {
+      g.appendChild(make('rect', {
+        x: -13, y: -34, width: 26, height: 68, rx: 4, ry: 4,
+        fill: 'white', stroke: '#111827', 'stroke-width': 3
+      }));
+      g.appendChild(make('rect', {
+        x: -6, y: -46, width: 12, height: 12, rx: 2, ry: 2,
+        fill: 'white', stroke: '#111827', 'stroke-width': 3
+      }));
+    }
+
+    function drawSwitch(g, closed) {
+      g.appendChild(make('line', { x1: -40, y1: 0, x2: -14, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
+      g.appendChild(make('line', { x1: 14, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
+      if (!closed) {
+        g.appendChild(make('line', {
+          x1: -10, y1: 0, x2: 10, y2: 0,
+          stroke: 'white', 'stroke-width': 6, 'stroke-linecap': 'round'
+        }));
+      }
+      g.appendChild(make('circle', { cx: -14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': 2.5 }));
+      g.appendChild(make('circle', { cx: 14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': 2.5 }));
+      g.appendChild(make('line', {
+        x1: -12, y1: 0, x2: 12, y2: closed ? 0 : -12,
+        stroke: '#111827', 'stroke-width': 3, 'stroke-linecap': 'round'
+      }));
+    }
+
+    function make(tag, attrs = {}) {
+      const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      return el;
+    }
+
+    function exportPNG() {
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      [...clone.querySelectorAll('line')].forEach(l => {
+        if (state.showGrid && l.getAttribute('stroke') === '#f0f0f0') l.remove();
+      });
+      [...clone.querySelectorAll('rect')].forEach(r => {
+        if (r.getAttribute('stroke-dasharray')) r.remove();
+      });
+      const bounds = contentBounds();
+      const padding = 30;
+      const vb = [
+        Math.max(0, bounds.x - padding),
+        Math.max(0, bounds.y - padding),
+        Math.max(120, bounds.w + padding * 2),
+        Math.max(120, bounds.h + padding * 2)
+      ];
+      clone.setAttribute('viewBox', vb.join(' '));
+      clone.setAttribute('width', vb[2]);
+      clone.setAttribute('height', vb[3]);
+
+      const data = new XMLSerializer().serializeToString(clone);
+      const img = new Image();
+      const blob = new Blob([data], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = vb[2];
+        canvas.height = vb[3];
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob((pngBlob) => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(pngBlob);
+          a.download = 'circuit-object-diagram.png';
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }, 'image/png');
+      };
+      img.src = url;
+    }
+
+    function contentBounds() {
+      const points = [];
+      state.wires.forEach(w => points.push(w.a, w.b));
+      state.components.forEach(c => {
+        const b = getComponentBounds(c);
+        points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
+      });
+      if (!points.length) return { x: 0, y: 0, w: 400, h: 300 };
+      const xs = points.map(p => p.x), ys = points.map(p => p.y);
+      const minX = Math.min(...xs), maxX = Math.max(...xs), minY = Math.min(...ys), maxY = Math.max(...ys);
+      return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
+    }
+
+    setStatus(`Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br>
+      Use <strong>Rotate 90°</strong> or press <span class="kbd">R</span>. Use <strong>Flip 180°</strong> or press <span class="kbd">F</span> to reverse a battery without losing that polarity when it auto-aligns to a wire.<br><br>
+      This version uses <strong>object-style components</strong>. The bulb has connection points on the <strong>left side of the metal base, right side of the metal base, and bottom contact</strong>. The battery connects at its <strong>top terminal</strong> and <strong>bottom terminal</strong>.`);
+    render();
+  </script>
+</body>
+</html>
