@@ -41,14 +41,13 @@ export default async function MetricsPage() {
   let data
   try {
     data = await getMetrics()
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+  } catch {
     return (
       <main className="min-h-screen bg-gray-50 px-6 py-16">
         <div className="max-w-3xl mx-auto">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Metrics</h1>
           <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">
-            <strong>Database error:</strong> {message}
+            Could not load metrics. Check that DATABASE_URL is set and the schema has been initialised.
           </div>
         </div>
       </main>
