@@ -115,11 +115,33 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX  # GA4 Measurement ID (replace when ready)
 
 ---
 
+## Tests
+
+Run with `npm test`. 20 tests across 3 suites, all passing.
+
+### What is tested and why
+
+| Suite | File | What it covers | Why it matters |
+|-------|------|----------------|----------------|
+| API route | `__tests__/api/event.test.ts` | Input validation (missing uuid, missing tool, unknown tool, malformed JSON), rate-limit silencing, happy-path 3-query flow, all 3 valid tool names | Core business logic — if this breaks, events are silently lost or the DB is hit unsafely |
+| Tracker | `__tests__/tracker.test.js` | UUID created on first visit, UUID reused on return, fetch fired for each of the 3 export button IDs, no-op when tool-id meta is absent | The tracker is injected into HTML files that non-technical co-coder edits — catching regressions here is important |
+| Index page | `__tests__/pages/index.test.tsx` | Both tool cards render, correct hrefs, footer credit and string.sg link present | Smoke test to catch accidental deletion of cards or wrong routes |
+
+### Known gaps (not tested)
+
+- **`/metrics` page** — requires a live NeonDB connection or a more involved mock. Not worth the complexity for now; validate manually after deploy.
+- **Circuit/cube HTML tools** — the diagram canvas logic (wire snapping, component placement, export) is not unit-tested. Would require a full browser environment (Playwright/Cypress). Log here if regressions become a problem.
+- **Combined circuit view** (`/tools/circuits`) — iframe CSS show/hide behaviour is not tested. The state-preservation fix is architectural (both iframes stay mounted); can be validated manually in the browser.
+- **Rate limiting under load** — the 5-minute window is tested via mock, but actual DB timing is not. Acceptable for current scale.
+
+---
+
 ## Changelog
 
 | Date | Description |
 |------|-------------|
 | 2026-03-24 | Project scaffolded. Next.js + NeonDB + Tailwind. dev.md created with full architecture decisions. |
+| 2026-03-24 | Tests added: API route (8 tests), tracker.js (7 tests), index page (5 tests). All 20 passing. |
 
 ---
 

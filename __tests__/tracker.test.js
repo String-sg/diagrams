@@ -14,11 +14,18 @@ function loadTracker() {
   eval(trackerCode)
 }
 
+const mockRandomUUID = jest.fn().mockReturnValue('mock-uuid-1234')
+
 beforeEach(() => {
   localStorage.clear()
   jest.clearAllMocks()
+  mockRandomUUID.mockReturnValue('mock-uuid-1234')
   global.fetch = jest.fn().mockResolvedValue({})
-  global.crypto = { randomUUID: jest.fn().mockReturnValue('mock-uuid-1234') }
+  Object.defineProperty(global, 'crypto', {
+    value: { randomUUID: mockRandomUUID },
+    writable: true,
+    configurable: true,
+  })
   document.head.innerHTML = ''
   document.body.innerHTML = ''
 })
@@ -35,7 +42,7 @@ describe('UUID management', () => {
     document.head.innerHTML = '<meta name="tool-id" content="circuit-symbol" />'
     loadTracker()
     expect(localStorage.getItem('diag_uid')).toBe('existing-uuid')
-    expect(global.crypto.randomUUID).not.toHaveBeenCalled()
+    expect(mockRandomUUID).not.toHaveBeenCalled()
   })
 })
 
