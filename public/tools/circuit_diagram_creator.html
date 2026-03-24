@@ -150,6 +150,7 @@
       <button class="tool-btn" data-tool="battery">Battery</button>
       <button class="tool-btn" data-tool="switch-open">Switch Open</button>
       <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
+      <button class="tool-btn" data-tool="electromagnet">Electromagnet</button>
       <button class="tool-btn" data-tool="delete">Delete</button>
     </div>
 
@@ -161,6 +162,10 @@
     <div class="field">
       <label for="batteryCells">Battery cells in series</label>
       <input id="batteryCells" type="number" min="1" max="8" value="2" />
+    </div>
+    <div class="field">
+      <label for="electromagnetCoils">Electromagnet coil turns</label>
+      <input id="electromagnetCoils" type="number" min="4" max="20" value="8" />
     </div>
 
     <h2>Edit</h2>
@@ -217,6 +222,7 @@
       rotateBtn: document.getElementById('rotateBtn'),
       toggleGridBtn: document.getElementById('toggleGridBtn'),
       batteryCells: document.getElementById('batteryCells'),
+      electromagnetCoils: document.getElementById('electromagnetCoils'),
       statusBox: document.getElementById('statusBox'),
       undoBtn: document.getElementById('undoBtn'),
       redoBtn: document.getElementById('redoBtn'),
@@ -373,15 +379,16 @@
       return { x: snap(p.x), y: snap(p.y) };
     }
 
-    function componentSize(type, cells = 2) {
+    function componentSize(type, param = 2) {
       if (type === 'bulb') return { w: 58, h: 58 };
-      if (type === 'battery') return { w: 34 + cells * 18, h: 44 };
+      if (type === 'battery') return { w: 34 + param * 18, h: 44 };
+      if (type === 'electromagnet') return { w: param * 14 + 20, h: 42 };
       return { w: 80, h: 30 };
     }
 
     function getComponentNodes(comp) {
-      const cells = comp.cells || 2;
-      const size = componentSize(comp.type, cells);
+      const param = comp.type === 'electromagnet' ? (comp.coils || 8) : (comp.cells || 2);
+      const size = componentSize(comp.type, param);
       if (comp.rotation % 180 === 0) {
         return [
           { x: comp.x - size.w / 2, y: comp.y },
@@ -424,7 +431,8 @@
     }
 
     function getComponentBounds(comp) {
-      const size = componentSize(comp.type, comp.cells || 2);
+      const param = comp.type === 'electromagnet' ? (comp.coils || 8) : (comp.cells || 2);
+      const size = componentSize(comp.type, param);
       const rotated = comp.rotation % 180 === 0
         ? { w: size.w + 16, h: Math.max(size.h, 34) + 16 }
         : { w: Math.max(size.h, 34) + 16, h: size.w + 16 };
@@ -441,7 +449,8 @@
         y: p.y,
         rotation: state.rotation,
         variant: type,
-        cells: type === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined
+        cells: type === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined,
+        coils: type === 'electromagnet' ? Math.max(4, Math.min(20, Number(ui.electromagnetCoils.value) || 8)) : undefined
       };
       autoAlignComponent(comp);
       state.components.push(comp);
@@ -504,7 +513,7 @@
         return;
       }
 
-      if (['bulb', 'battery', 'switch-open', 'switch-closed'].includes(state.tool)) {
+      if (['bulb', 'battery', 'switch-open', 'switch-closed', 'electromagnet'].includes(state.tool)) {
         const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
         addComponent(type, p);
         const comp = state.components[state.components.length - 1];
@@ -644,6 +653,7 @@
         if (comp.type === 'bulb') drawBulb(wrap);
         if (comp.type === 'battery') drawBattery(wrap, comp.cells || 2);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
+        if (comp.type === 'electromagnet') drawElectromagnet(wrap, comp.coils || 8);
         svg.appendChild(wrap);
       }
     }
@@ -703,6 +713,34 @@
         stroke: '#111827',
         'stroke-width': 3,
         'stroke-linecap': 'round'
+      }));
+    }
+
+    function drawElectromagnet(g, coils) {
+      const w = coils * 14 + 20;
+      const END_CAP = 8;
+      const coilX = -w / 2 + END_CAP;
+      const coilW = w - END_CAP * 2;
+      const archW = coilW / coils;
+      const archR = archW / 2;
+
+      // Lead lines connecting to wire connection points at (±w/2, 0)
+      g.appendChild(make('line', { x1: -w/2, y1: 0, x2: coilX, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
+      g.appendChild(make('line', { x1: coilX + coilW, y1: 0, x2: w/2, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
+
+      // Coil arches — semicircles above the centre line
+      for (let i = 0; i < coils; i++) {
+        const x0 = coilX + i * archW;
+        g.appendChild(make('path', {
+          d: `M ${x0} 0 A ${archR} ${archR} 0 0 0 ${x0 + archW} 0`,
+          fill: 'none', stroke: '#111827', 'stroke-width': 2.5, 'stroke-linecap': 'round'
+        }));
+      }
+
+      // Iron core rod (below arches, white fill so arches read cleanly against it)
+      g.appendChild(make('rect', {
+        x: coilX - 2, y: 5, width: coilW + 4, height: 10,
+        fill: 'white', stroke: '#111827', 'stroke-width': 1.5
       }));
     }
 

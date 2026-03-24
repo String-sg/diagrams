@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sql } from '@/lib/db'
+import { getDb } from '@/lib/db'
 
 const VALID_TOOLS = new Set(['circuit-symbol', 'circuit-object', 'isometric-cube'])
 
@@ -10,6 +10,8 @@ export async function POST(req: NextRequest) {
   if (!uuid || !tool || !VALID_TOOLS.has(tool)) {
     return NextResponse.json({}, { status: 400 })
   }
+
+  const sql = getDb()
 
   // Rate limit: 1 recorded event per uuid+tool per 5 minutes
   const recent = await sql`

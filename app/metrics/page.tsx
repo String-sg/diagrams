@@ -1,6 +1,9 @@
-import { sql } from '@/lib/db'
+export const dynamic = 'force-dynamic'
+
+import { getDb } from '@/lib/db'
 
 async function getMetrics() {
+  const sql = getDb()
   const [totals, allTime, monthly] = await Promise.all([
     sql`
       SELECT
