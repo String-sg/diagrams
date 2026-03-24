@@ -1,0 +1,131 @@
+# Dev Log — Diagrams
+
+## Stack
+
+| Concern | Choice |
+|---------|--------|
+| Framework | Next.js 14 (App Router) on Vercel |
+| Database | NeonDB (Postgres) via `@neondatabase/serverless` |
+| Styling | Tailwind CSS |
+| Analytics | GA4 (traffic/performance) + NeonDB (product metrics) |
+| Auth | None — `/metrics` is unlisted but unprotected for now |
+
+---
+
+## Tools
+
+Three tools served as static HTML files from `/public/tools/`. Not migrated to React — preserves editability for non-technical co-coder. The only required change to each HTML file is one `<meta>` tag and one `<script>` tag at the bottom.
+
+| Tool | HTML file | Route |
+|------|-----------|-------|
+| Circuit Symbol Diagram | `circuit_diagram_creator.html` | `/tools/circuits` (symbol tab) |
+| Circuit Object Diagram | `object_circuit.html` | `/tools/circuits` (object tab) |
+| Isometric Cube Generator | `isometric-cube-generator.html` | `/tools/isometric-cube` |
+
+### Decision — Combined circuit view
+
+A single `/tools/circuits` Next.js page renders **both circuit iframes simultaneously**, toggling visibility with CSS (`display: none` ↔ `block`). Both iframes stay mounted in the DOM at all times — switching tabs **preserves canvas state**. This fixes the state-loss bug in the old `circuit-diagram-suite.html`.
+
+### Decision — Suite wrapper retired
+
+`circuit-diagram-suite.html` removed from the index and archived as `_archive/circuit-diagram-suite.html`. The combined Next.js page supersedes it cleanly.
+
+### Decision — Electromagnet integration (Option B)
+
+`electromagnet_creator.html` (standalone file from co-coder) **not added as a 4th tool**. Instead, the electromagnet is added as a draggable component inside both circuit tools (symbol and object modes), alongside battery, bulb, and switch.
+
+**Coil rendering fix:** original standalone used `fill: none` on the rod rect, causing flat look. Fixed draw order: back coil arches → rod rect (white fill) → front coil arches. Gives correct 3D wrap illusion.
+
+Coil count is configurable per component (like battery cell count), range 4–20.
+
+---
+
+## Metrics Design
+
+### User identity
+Random UUID generated on first visit, stored in `localStorage` under key `diag_uid`. No login. Resets on storage clear (accepted tradeoff).
+
+### Tracked event
+`diagram_exported` — fires when user clicks the **Download PNG** button in any tool.
+
+### Rate limit
+1 recorded event per UUID per tool per **5 minutes**, enforced server-side. Excess events return 200 silently.
+
+### NeonDB schema
+
+```sql
+CREATE TABLE IF NOT EXISTS users (
+  uuid      TEXT PRIMARY KEY,
+  first_seen TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS events (
+  id         SERIAL PRIMARY KEY,
+  user_uuid  TEXT NOT NULL REFERENCES users(uuid),
+  tool       TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS events_tool_created ON events(tool, created_at);
+CREATE INDEX IF NOT EXISTS events_user_tool    ON events(user_uuid, tool, created_at);
+```
+
+**Valid `tool` values:** `circuit-symbol` | `circuit-object` | `isometric-cube`
+
+### Metrics dashboard
+Route: `/metrics` — server component, queries NeonDB at render time.
+
+Sections:
+1. **Aggregate** — all-time unique users, all-time exports, this month's exports, this month's unique exporters (MAU)
+2. **Per-tool** — same four metrics per tool
+
+MAU definition: unique UUIDs with ≥1 export event in the current calendar month.
+
+### GA4
+Placeholder Measurement ID: `G-XXXXXXXXXX`. Replace with real ID in `.env.local`:
+```
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX
+```
+
+---
+
+## Tracker injection
+
+Each HTML tool file gets two additions (co-coder must not remove these):
+
+```html
+<!-- In <head>: identifies the tool for the tracker -->
+<meta name="tool-id" content="circuit-symbol" />
+
+<!-- Before </body>: loads shared tracking script -->
+<script src="/tracker.js"></script>
+```
+
+`/public/tracker.js` handles UUID management and PNG-button click detection. Single file, shared across all tools.
+
+---
+
+## Environment Variables
+
+```
+DATABASE_URL=              # NeonDB connection string
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX  # GA4 Measurement ID (replace when ready)
+```
+
+---
+
+## Changelog
+
+| Date | Description |
+|------|-------------|
+| 2026-03-24 | Project scaffolded. Next.js + NeonDB + Tailwind. dev.md created with full architecture decisions. |
+
+---
+
+## Bug Tracker
+
+| ID | Status | Description | Notes |
+|----|--------|-------------|-------|
+| B001 | Fixed | Circuit suite iframe state loss on tab switch | Fixed by rendering both iframes simultaneously, toggling with CSS display:none |
+| B002 | Fixed | Electromagnet coil flat rendering (no depth) | Fixed draw order: back arches → rod (white fill) → front arches |
