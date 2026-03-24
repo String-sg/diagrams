@@ -38,7 +38,23 @@ const LABELS: Record<string, string> = {
 }
 
 export default async function MetricsPage() {
-  const { totals, allTime, monthly } = await getMetrics()
+  let data
+  try {
+    data = await getMetrics()
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err)
+    return (
+      <main className="min-h-screen bg-gray-50 px-6 py-16">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Metrics</h1>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-5 text-sm text-red-700">
+            <strong>Database error:</strong> {message}
+          </div>
+        </div>
+      </main>
+    )
+  }
+  const { totals, allTime, monthly } = data
   const allTimeMap = Object.fromEntries(allTime.map(r => [r.tool, r]))
   const monthlyMap = Object.fromEntries(monthly.map(r => [r.tool, r]))
 
