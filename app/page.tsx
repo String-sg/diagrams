@@ -38,6 +38,12 @@ export default function Home() {
             </Link>
           ))}
         </div>
+        <footer className="mt-16 text-xs text-gray-400">
+          Created by Julienne, supported by{' '}
+          <a href="https://string.sg" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
+            string.sg
+          </a>
+        </footer>
       </div>
     </main>
   )
