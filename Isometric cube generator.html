@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cube Solid Builder</title>
+  <style>
+    :root {
+      --bg: #f7f7f5;
+      --panel: #ffffff;
+      --ink: #1f2937;
+      --muted: #6b7280;
+      --line: #111827;
+      --accent: #2563eb;
+      --face-top: #ffffff;
+      --face-left: #f3f4f6;
+      --face-right: #e5e7eb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 30px;
+    }
+
+    p.lead {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+
+    .controls {
+      display: grid;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    input, button {
+      width: 100%;
+      font-size: 15px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      padding: 10px 12px;
+    }
+
+    input[type="range"] { padding: 0; }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 700;
+      border: none;
+      background: var(--accent);
+      color: white;
+    }
+
+    button.secondary { background: #374151; }
+    button.tertiary { background: #0f766e; }
+
+    .small {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 4px;
+    }
+
+    .stat {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fafafa;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 22px;
+      margin-top: 4px;
+    }
+
+    .canvas-panel {
+      padding: 0;
+      overflow: hidden;
+    }
+
+    .canvas-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .canvas-wrap {
+      padding: 14px;
+      background: #fcfcfc;
+    }
+
+    canvas {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: white;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      cursor: pointer;
+    }
+
+    .cursor-label {
+      position: fixed;
+      z-index: 20;
+      pointer-events: none;
+      background: rgba(17, 24, 39, 0.94);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      line-height: 1.2;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+      transform: translate(12px, 12px);
+      display: none;
+      white-space: nowrap;
+    }
+
+    .pill {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    ul.compact {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 920px) {
+      .wrap { padding: 16px; }
+      .layout {
+        grid-template-columns: minmax(280px, 320px) minmax(420px, 1fr);
+        gap: 14px;
+        overflow-x: auto;
+        align-items: start;
+      }
+      .panel { min-width: 0; }
+      .canvas-panel { min-width: 520px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="cursorLabel" class="cursor-label"></div>
+  <div class="wrap">
+    <h1>Cube Solid Builder</h1>
+    <p class="lead">Generate a random connected solid, then edit it directly on the isometric grid. Left click a highlighted face to add a cube. Right click a visible top face to remove the top cube from that stack. <b> Scroll down to bottom of left panel for editing guide</b></p>
+
+    <div class="layout">
+      <div class="panel controls">
+        <div>
+          <label for="cubeCount">Random cube count</label>
+          <input id="cubeCount" type="number" min="1" max="60" value="8" />
+          <div class="small">Used when creating a fresh random solid.</div>
+        </div>
+
+        <div>
+          <label for="spread">Shape spread</label>
+          <input id="spread" type="range" min="0" max="100" value="55" />
+          <div class="small">Lower values favour taller stacks; higher values favour wider solids.</div>
+        </div>
+
+        <div class="row">
+          <button id="generateBtn">Randomise</button>
+          <button id="resetBtn" class="secondary">Clear</button>
+        </div>
+
+        <div class="row">
+          <button id="downloadBtn" class="tertiary">Download Iso PNG</button>
+          <button id="toggleWallsBtn" class="secondary">Show Walls</button>
+        </div>
+
+        <div class="row">
+          <button id="exportViewsBtn" class="secondary">Download Views PNG</button>
+          <button id="toggleGuidesBtn" class="secondary">Hide Guides</button>
+        </div>
+
+        <div class="row">
+          <button id="toggleDotsBtn" class="secondary">Show Dotted Grid</button>
+          <div></div>
+        </div>
+
+        <div class="panel" style="padding:12px; border-radius:12px;">
+          <strong>Export settings (click to change)</strong>
+          <div class="row" style="margin-top:10px;">
+            <button id="toggleExportDotsBtn" class="secondary">Export Without Dots</button>
+            <button id="toggleExportWallsBtn" class="secondary">Export Without Walls</button>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stat">Cubes<strong id="statCubes">0</strong></div>
+          <div class="stat">Columns<strong id="statColumns">0</strong></div>
+          <div class="stat">Max height<strong id="statHeight">0</strong></div>
+          <div class="stat">Footprint<strong id="statFootprint">0</strong></div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div>
+            <label>How editing works</label>
+            <ul class="compact">
+              <li><b>To add cube:</b> Left click a highlighted face to attach one cube to that surface.</li>
+              <li><b>To remove cube:</b> Right click the visible top face of a stack to remove the top cube.</li>
+              <li>Top highlights add a cube on top of a stack; other highlights add a grounded neighbouring cube.</li>
+	<li>Dots and wall are not automatically added to export file despite being present in display. Toggle the export settings for your preferred export format.</li>
+<li>Hide guides to view the cuboid.</li>
+	<li> Views exported will showcase: Top, Front and Side
+              <li>Floating cubes are not allowed in this builder.</li>
+              <li>Optional wall guides can be shown as three simple reference lines anchored to the far back bottom corner of the solid.</li>
+	<li><b><u>Note that randomly generated cubes may result in hidden cubes</b></u></li>
+	
+            </ul>
+          </div>
+          <div class="small">
+            Conceptualised and vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel canvas-panel">
+        <div class="canvas-head">
+          <div>
+            <strong>Interactive Isometric Grid</strong><br />
+            <span class="small" id="hoverHint">Left click to add cubes, right click to remove cubes</span>
+          </div>
+          <span class="pill" id="shapeTag">Ready</span>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas" width="920" height="680"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    const cubeCountInput = document.getElementById('cubeCount');
+    const spreadInput = document.getElementById('spread');
+    const generateBtn = document.getElementById('generateBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const toggleWallsBtn = document.getElementById('toggleWallsBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const exportViewsBtn = document.getElementById('exportViewsBtn');
+    const toggleGuidesBtn = document.getElementById('toggleGuidesBtn');
+    const toggleDotsBtn = document.getElementById('toggleDotsBtn');
+    const toggleExportDotsBtn = document.getElementById('toggleExportDotsBtn');
+    const toggleExportWallsBtn = document.getElementById('toggleExportWallsBtn');
+    const shapeTag = document.getElementById('shapeTag');
+    const hoverHint = document.getElementById('hoverHint');
+    const cursorLabel = document.getElementById('cursorLabel');
+
+    const statCubes = document.getElementById('statCubes');
+    const statColumns = document.getElementById('statColumns');
+    const statHeight = document.getElementById('statHeight');
+    const statFootprint = document.getElementById('statFootprint');
+
+    const state = {
+      heights: new Map(),
+      addTargets: [],
+      removeTargets: [],
+      faceTargets: [],
+      showGuides: true,
+      showDots: false,
+      exportDots: false,
+      showWalls: false,
+      exportWalls: false,
+      randomCounter: 0,
+      hoveredTarget: null
+    };
+
+    function mulberry32(a) {
+      return function() {
+        let t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function columnKey(x, y) { return `${x},${y}`; }
+    function parseColumnKey(k) { const [x, y] = k.split(',').map(Number); return { x, y }; }
+    function setHeight(x, y, h) { const k = columnKey(x, y); if (h <= 0) state.heights.delete(k); else state.heights.set(k, h); }
+    function getHeight(x, y) { return state.heights.get(columnKey(x, y)) || 0; }
+    function totalCubes() { let total = 0; for (const h of state.heights.values()) total += h; return total; }
+    function setMapHeight(map, x, y, h) { const k = columnKey(x, y); if (h <= 0) map.delete(k); else map.set(k, h); }
+
+    function generateSolid(n, spread) {
+      const seed = Date.now() + (state.randomCounter++ * 1013904223) + Math.floor(Math.random() * 1e9);
+      const rand = mulberry32(seed >>> 0);
+      const heights = new Map();
+      heights.set(columnKey(0, 0), 1);
+
+      while (Array.from(heights.values()).reduce((a, b) => a + b, 0) < n) {
+        const currentColumns = Array.from(heights.keys()).map(parseColumnKey);
+        const baseChance = spread / 100;
+        const doNewColumn = rand() < baseChance || currentColumns.length === 0;
+        let candidates = [];
+
+        if (doNewColumn) {
+          const seen = new Set();
+          for (const c of currentColumns) {
+            const neighbors = [
+              { x: c.x + 1, y: c.y },
+              { x: c.x - 1, y: c.y },
+              { x: c.x, y: c.y + 1 },
+              { x: c.x, y: c.y - 1 }
+            ];
+            for (const nb of neighbors) {
+              const ck = columnKey(nb.x, nb.y);
+              if (!heights.has(ck) && !seen.has(ck)) {
+                seen.add(ck);
+                candidates.push({ x: nb.x, y: nb.y, h: 1 });
+              }
+            }
+          }
+        }
+
+        if (candidates.length === 0) {
+          for (const c of currentColumns) {
+            const h = heights.get(columnKey(c.x, c.y));
+            candidates.push({ x: c.x, y: c.y, h: h + 1 });
+          }
+        }
+
+        candidates.sort((a, b) => {
+          const da = Math.abs(a.x) + Math.abs(a.y) + a.h * (1 - spread / 100);
+          const db = Math.abs(b.x) + Math.abs(b.y) + b.h * (1 - spread / 100);
+          return da - db;
+        });
+
+        const sampleWindow = Math.max(1, Math.ceil(candidates.length * 0.55));
+        const chosen = candidates[Math.floor(rand() * sampleWindow)];
+        setMapHeight(heights, chosen.x, chosen.y, chosen.h);
+      }
+
+      return { heights };
+    }
+
+    function isoProject(x, y, z, scale, ox, oy) {
+      return {
+        x: ox + (x - y) * scale,
+        y: oy + (x + y) * scale * 0.55 - z * scale * 1.1
+      };
+    }
+
+    function getCubePolygons(x, y, z, scale, ox, oy) {
+      const p = isoProject(x, y, z, scale, ox, oy);
+      const top = { x: p.x, y: p.y - scale * 0.55 };
+      const right = { x: p.x + scale, y: p.y };
+      const bottom = { x: p.x, y: p.y + scale * 0.55 };
+      const left = { x: p.x - scale, y: p.y };
+      const down = scale * 1.1;
+      const l2 = { x: left.x, y: left.y + down };
+      const b2 = { x: bottom.x, y: bottom.y + down };
+      const r2 = { x: right.x, y: right.y + down };
+      return {
+        top: [top, right, bottom, left],
+        left: [left, bottom, b2, l2],
+        right: [bottom, right, r2, b2]
+      };
+    }
+
+    function drawPath(ctx2, points) {
+      ctx2.beginPath();
+      ctx2.moveTo(points[0].x, points[0].y);
+      for (let i = 1; i < points.length; i++) ctx2.lineTo(points[i].x, points[i].y);
+      ctx2.closePath();
+    }
+
+    function fillPoly(points, fill, stroke = '#111827', lineWidth = 2, drawCtx = ctx) {
+      drawPath(drawCtx, points);
+      drawCtx.fillStyle = fill;
+      drawCtx.fill();
+      drawCtx.lineWidth = lineWidth;
+      drawCtx.strokeStyle = stroke;
+      drawCtx.lineJoin = 'round';
+      drawCtx.stroke();
+    }
+
+    function strokePoly(points, stroke = '#ea580c', lineWidth = 3) {
+      drawPath(ctx, points);
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = stroke;
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+    }
+
+    function pointInPolygon(px, py, poly) {
+      let inside = false;
+      for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+        const xi = poly[i].x, yi = poly[i].y;
+        const xj = poly[j].x, yj = poly[j].y;
+        const intersect = ((yi > py) !== (yj > py)) &&
+          (px < (xj - xi) * (py - yi) / ((yj - yi) || 1e-9) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
+    function getBounds() {
+      const entries = Array.from(state.heights.entries());
+      if (!entries.length) return { minX: -2, maxX: 2, minY: -2, maxY: 2, maxH: 1 };
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, maxH = 0;
+      for (const [k, h] of entries) {
+        const { x, y } = parseColumnKey(k);
+        minX = Math.min(minX, x);
+        maxX = Math.max(maxX, x);
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+        maxH = Math.max(maxH, h);
+      }
+      return { minX, maxX, minY, maxY, maxH };
+    }
+
+    function computeRenderParams(width = canvas.width, height = canvas.height) {
+      const bounds = getBounds();
+      const pad = 2;
+      const widthUnits = (bounds.maxX - bounds.minX + 1 + pad * 2) + (bounds.maxY - bounds.minY + 1 + pad * 2);
+      const heightUnits = ((bounds.maxX - bounds.minX + 1 + pad * 2) + (bounds.maxY - bounds.minY + 1 + pad * 2)) * 0.55 + Math.max(2, bounds.maxH + 2) * 1.1;
+      const scaleX = (width - 180) / Math.max(6, widthUnits);
+      const scaleY = (height - 160) / Math.max(6, heightUnits);
+      const scale = Math.max(18, Math.min(42, Math.min(scaleX, scaleY)));
+      const centerX = (bounds.minX + bounds.maxX) / 2;
+      const centerY = (bounds.minY + bounds.maxY) / 2;
+      const ox = width / 2 - (centerX - centerY) * scale;
+      const oy = height / 2 + ((centerX + centerY) * scale * 0.12) + 90;
+      return { bounds, scale, ox, oy };
+    }
+
+    function drawProjectedDots(ctx2, width, height, params) {
+      const { bounds, scale, ox, oy } = params;
+      const seen = new Set();
+      const minX = bounds.minX - 6;
+      const maxX = bounds.maxX + 6;
+      const minY = bounds.minY - 6;
+      const maxY = bounds.maxY + 6;
+      const maxZ = Math.max(5, bounds.maxH + 4);
+
+      ctx2.save();
+      ctx2.fillStyle = '#111827';
+
+      for (let z = 0; z <= maxZ; z++) {
+        for (let x = minX; x <= maxX; x++) {
+          for (let y = minY; y <= maxY; y++) {
+            const p = isoProject(x, y, z, scale, ox, oy);
+            const pts = [
+              { x: p.x, y: p.y - scale * 0.55 },
+              { x: p.x + scale, y: p.y },
+              { x: p.x, y: p.y + scale * 0.55 },
+              { x: p.x - scale, y: p.y }
+            ];
+            for (const pt of pts) {
+              const rx = Math.round(pt.x);
+              const ry = Math.round(pt.y);
+              if (rx < 16 || rx > width - 16 || ry < 16 || ry > height - 16) continue;
+              const key = `${rx},${ry}`;
+              if (seen.has(key)) continue;
+              seen.add(key);
+              ctx2.beginPath();
+              ctx2.arc(rx, ry, 3.1, 0, Math.PI * 2);
+              ctx2.fill();
+            }
+          }
+        }
+      }
+      ctx2.restore();
+    }
+
+    function lineExists(edges, a, b) {
+      const key1 = `${Math.round(a.x)},${Math.round(a.y)}|${Math.round(b.x)},${Math.round(b.y)}`;
+      const key2 = `${Math.round(b.x)},${Math.round(b.y)}|${Math.round(a.x)},${Math.round(a.y)}`;
+      return edges.has(key1) || edges.has(key2);
+    }
+
+    function collectVisibleEdges(params) {
+      const { scale, ox, oy } = params;
+      const drawList = [];
+      for (const [k, h] of state.heights.entries()) {
+        const { x, y } = parseColumnKey(k);
+        for (let z = 0; z < h; z++) drawList.push({ x, y, z, h });
+      }
+      drawList.sort((a, b) => {
+        const da = a.x + a.y + a.z;
+        const db = b.x + b.y + b.z;
+        if (da !== db) return da - db;
+        if (a.z !== b.z) return a.z - b.z;
+        return a.x - b.x;
+      });
+      const edges = new Set();
+      for (const cube of drawList) {
+        const polys = getCubePolygons(cube.x, cube.y, cube.z, scale, ox, oy);
+        const segments = [
+          [polys.top[0], polys.top[1]],[polys.top[1], polys.top[2]],[polys.top[2], polys.top[3]],[polys.top[3], polys.top[0]],
+          [polys.left[0], polys.left[1]],[polys.left[1], polys.left[2]],[polys.left[2], polys.left[3]],[polys.left[3], polys.left[0]],
+          [polys.right[0], polys.right[1]],[polys.right[1], polys.right[2]],[polys.right[2], polys.right[3]],[polys.right[3], polys.right[0]]
+        ];
+        for (const [a,b] of segments) {
+          const key = `${Math.round(a.x)},${Math.round(a.y)}|${Math.round(b.x)},${Math.round(b.y)}`;
+          const rev = `${Math.round(b.x)},${Math.round(b.y)}|${Math.round(a.x)},${Math.round(a.y)}`;
+          edges.add(key);
+          edges.add(rev);
+        }
+      }
+      return edges;
+    }
+
+    function drawWallGuides(ctx2, width, height, params) {
+      const { bounds, scale, ox, oy } = params;
+
+      // Anchor the trihedral reference lines at the bottom-most cube corner that is
+      // farthest from the viewer: the back-left-bottom lattice point of the solid.
+      // Then extend the three rays so they reach just beyond the solid's extents in
+      // the top, front, and side directions.
+      const anchor = isoProject(bounds.minX, bounds.minY, 0, scale, ox, oy);
+      const corner = { x: anchor.x, y: anchor.y + scale * 0.55 };
+
+      const verticalLen = (bounds.maxH + 1.1) * scale * 1.1;
+      // extend slightly beyond solid (~1 extra cube length for visibility)
+      const frontLen = (bounds.maxX - bounds.minX + 2.15) * scale;
+      const sideLen = (bounds.maxY - bounds.minY + 2.15) * scale;
+
+      const up = { x: corner.x, y: corner.y - verticalLen };
+      const downLeft = { x: corner.x - sideLen, y: corner.y + sideLen * 0.55 };
+      const downRight = { x: corner.x + frontLen, y: corner.y + frontLen * 0.55 };
+
+      ctx2.save();
+      ctx2.strokeStyle = '#6b7280';
+      ctx2.lineWidth = 1.6;
+      ctx2.lineCap = 'round';
+
+      const lines = [
+        [corner, up],
+        [corner, downLeft],
+        [corner, downRight]
+      ];
+
+      for (const [a, b] of lines) {
+        if ((a.x < -20 && b.x < -20) || (a.x > width + 20 && b.x > width + 20)) continue;
+        if ((a.y < -20 && b.y < -20) || (a.y > height + 20 && b.y > height + 20)) continue;
+        ctx2.beginPath();
+        ctx2.moveTo(Math.round(a.x), Math.round(a.y));
+        ctx2.lineTo(Math.round(b.x), Math.round(b.y));
+        ctx2.stroke();
+      }
+
+      ctx2.restore();
+    }
+
+    function drawViewGrid(ctx2, cols, rows, cell, ox, oy) {
+      ctx2.strokeStyle = '#cbd5e1';
+      ctx2.lineWidth = 1;
+      for (let x = 0; x <= cols; x++) {
+        ctx2.beginPath();
+        ctx2.moveTo(ox + x * cell, oy);
+        ctx2.lineTo(ox + x * cell, oy + rows * cell);
+        ctx2.stroke();
+      }
+      for (let y = 0; y <= rows; y++) {
+        ctx2.beginPath();
+        ctx2.moveTo(ox, oy + y * cell);
+        ctx2.lineTo(ox + cols * cell, oy + y * cell);
+        ctx2.stroke();
+      }
+    }
+
+    function sameTarget(a, b) {
+      return !!a && !!b && a.kind === b.kind && a.x === b.x && a.y === b.y && a.h === b.h;
+    }
+
+    function drawGhostTarget(target, scale, ox, oy) {
+      const polys = getCubePolygons(target.x, target.y, target.h - 1, scale, ox, oy);
+      const hovered = state.hoveredTarget && state.hoveredTarget.target && sameTarget(state.hoveredTarget.target, target);
+      fillPoly(polys.left, hovered ? 'rgba(249,115,22,0.18)' : 'rgba(37,99,235,0.08)', hovered ? 'rgba(249,115,22,0.65)' : 'rgba(37,99,235,0.25)', hovered ? 2.1 : 1.3);
+      fillPoly(polys.right, hovered ? 'rgba(249,115,22,0.24)' : 'rgba(37,99,235,0.14)', hovered ? 'rgba(249,115,22,0.72)' : 'rgba(37,99,235,0.30)', hovered ? 2.1 : 1.3);
+      fillPoly(polys.top, hovered ? 'rgba(249,115,22,0.30)' : 'rgba(37,99,235,0.18)', hovered ? 'rgba(249,115,22,0.90)' : 'rgba(37,99,235,0.45)', hovered ? 2.4 : 1.6);
+      state.addTargets.push({ poly: polys.top, target, face: 'top', polys });
+    }
+
+    function getAttachmentTargetsForCube(cube) {
+      const { x, y, z, h } = cube;
+      const targets = [{ kind: 'top', x, y, h: h + 1, label: `Add on top of this stack (new height ${h + 1})` }];
+      if (z === h - 1) {
+        const neighbours = [
+          { kind: 'left', x: x - 1, y, label: 'Add a grounded cube on the left-facing side' },
+          { kind: 'right', x, y: y - 1, label: 'Add a grounded cube on the right-facing side' },
+          { kind: 'front', x, y: y + 1, label: 'Add a grounded cube in front' },
+          { kind: 'side', x: x + 1, y, label: 'Add a grounded cube on the far side' }
+        ];
+        for (const n of neighbours) {
+          if (getHeight(n.x, n.y) === 0) targets.push({ ...n, h: 1 });
+        }
+      }
+      return targets;
+    }
+
+    function describeTarget(item) {
+      if (!item) return 'Left click to add cubes, right click to remove cubes';
+      if (item.type === 'remove') return `Remove top cube from stack at (${item.x}, ${item.y})`;
+      return `${item.target.label} — target (${item.target.x}, ${item.target.y})`;
+    }
+
+    function shortLabel(item) {
+      if (!item) return '';
+      if (item.type === 'remove') return 'Remove top cube';
+      if (item.target?.kind === 'top') return 'Add on top';
+      if (item.target?.kind === 'left') return 'Add on left side';
+      if (item.target?.kind === 'right') return 'Add on right side';
+      if (item.target?.kind === 'front') return 'Add in front';
+      if (item.target?.kind === 'side') return 'Add on far side';
+      return 'Cube target';
+    }
+
+    function updateCursorLabel(event) {
+      if (!state.hoveredTarget) {
+        cursorLabel.style.display = 'none';
+        return;
+      }
+      cursorLabel.textContent = shortLabel(state.hoveredTarget);
+      cursorLabel.style.left = `${event.clientX}px`;
+      cursorLabel.style.top = `${event.clientY}px`;
+      cursorLabel.style.display = 'block';
+    }
+
+    function drawHoveredOutline() {
+      if (!state.hoveredTarget) return;
+      if (state.hoveredTarget.polys) {
+        const face = state.hoveredTarget.face || 'top';
+        if (state.hoveredTarget.polys[face]) strokePoly(state.hoveredTarget.polys[face], '#c2410c', 3.5);
+      } else if (state.hoveredTarget.poly) {
+        strokePoly(state.hoveredTarget.poly, '#ea580c', 3);
+      }
+    }
+
+    function getHoverTargetAtPoint(pt) {
+      for (let i = state.addTargets.length - 1; i >= 0; i--) {
+        const item = state.addTargets[i];
+        if (pointInPolygon(pt.x, pt.y, item.poly)) return { ...item, type: 'add' };
+      }
+      for (let i = state.faceTargets.length - 1; i >= 0; i--) {
+        const item = state.faceTargets[i];
+        if (pointInPolygon(pt.x, pt.y, item.poly)) return { ...item, type: 'add' };
+      }
+      for (let i = state.removeTargets.length - 1; i >= 0; i--) {
+        const item = state.removeTargets[i];
+        if (pointInPolygon(pt.x, pt.y, item.poly)) return { ...item, type: 'remove' };
+      }
+      return null;
+    }
+
+    function render(options = {}) {
+      const showGuides = options.showGuides ?? state.showGuides;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      state.addTargets = [];
+      state.removeTargets = [];
+      state.faceTargets = [];
+
+      const params = computeRenderParams(canvas.width, canvas.height);
+      const { scale, ox, oy } = params;
+
+      if (state.showDots) {
+        drawProjectedDots(ctx, canvas.width, canvas.height, params);
+      }
+      if (state.showWalls) {
+        drawWallGuides(ctx, canvas.width, canvas.height, params);
+      }
+
+      const drawList = [];
+      for (const [k, h] of state.heights.entries()) {
+        const { x, y } = parseColumnKey(k);
+        for (let z = 0; z < h; z++) drawList.push({ x, y, z, h });
+      }
+
+      drawList.sort((a, b) => {
+        const da = a.x + a.y + a.z;
+        const db = b.x + b.y + b.z;
+        if (da !== db) return da - db;
+        if (a.z !== b.z) return a.z - b.z;
+        return a.x - b.x;
+      });
+
+      if (showGuides) {
+        for (const cube of drawList) {
+          if (cube.z !== cube.h - 1) continue;
+          const attachments = getAttachmentTargetsForCube(cube);
+          for (const att of attachments) {
+            if (att.kind === 'top') {
+              drawGhostTarget(att, scale, ox, oy);
+            } else if (att.kind === 'left') {
+              const gp = getCubePolygons(att.x, att.y, 0, scale, ox, oy);
+              const hovered = state.hoveredTarget && state.hoveredTarget.target && sameTarget(state.hoveredTarget.target, att);
+              fillPoly(gp.top, hovered ? 'rgba(245,158,11,0.30)' : 'rgba(245,158,11,0.18)', hovered ? 'rgba(217,119,6,0.95)' : 'rgba(217,119,6,0.55)', hovered ? 2.4 : 1.6);
+              state.faceTargets.push({ poly: gp.top, target: att, face: 'top', polys: gp });
+            } else if (att.kind === 'right') {
+              const gp = getCubePolygons(att.x, att.y, 0, scale, ox, oy);
+              const hovered = state.hoveredTarget && state.hoveredTarget.target && sameTarget(state.hoveredTarget.target, att);
+              fillPoly(gp.top, hovered ? 'rgba(168,85,247,0.30)' : 'rgba(168,85,247,0.18)', hovered ? 'rgba(126,34,206,0.95)' : 'rgba(126,34,206,0.55)', hovered ? 2.4 : 1.6);
+              state.faceTargets.push({ poly: gp.top, target: att, face: 'top', polys: gp });
+            } else if (att.kind === 'front') {
+              const gp = getCubePolygons(att.x, att.y, 0, scale, ox, oy);
+              const hovered = state.hoveredTarget && state.hoveredTarget.target && sameTarget(state.hoveredTarget.target, att);
+              fillPoly(gp.top, hovered ? 'rgba(14,165,233,0.30)' : 'rgba(14,165,233,0.18)', hovered ? 'rgba(2,132,199,0.95)' : 'rgba(2,132,199,0.55)', hovered ? 2.4 : 1.6);
+              state.faceTargets.push({ poly: gp.top, target: att, face: 'top', polys: gp });
+            } else if (att.kind === 'side') {
+              const gp = getCubePolygons(att.x, att.y, 0, scale, ox, oy);
+              const hovered = state.hoveredTarget && state.hoveredTarget.target && sameTarget(state.hoveredTarget.target, att);
+              fillPoly(gp.top, hovered ? 'rgba(34,197,94,0.30)' : 'rgba(34,197,94,0.18)', hovered ? 'rgba(22,163,74,0.95)' : 'rgba(22,163,74,0.55)', hovered ? 2.4 : 1.6);
+              state.faceTargets.push({ poly: gp.top, target: att, face: 'top', polys: gp });
+            }
+          }
+        }
+      }
+
+      const faceTop = getComputedStyle(document.documentElement).getPropertyValue('--face-top').trim();
+      const faceLeft = getComputedStyle(document.documentElement).getPropertyValue('--face-left').trim();
+      const faceRight = getComputedStyle(document.documentElement).getPropertyValue('--face-right').trim();
+
+      for (const cube of drawList) {
+        const polys = getCubePolygons(cube.x, cube.y, cube.z, scale, ox, oy);
+        fillPoly(polys.left, faceLeft);
+        fillPoly(polys.right, faceRight);
+        fillPoly(polys.top, faceTop);
+        if (cube.z === cube.h - 1) {
+          state.removeTargets.push({ poly: polys.top, x: cube.x, y: cube.y, h: cube.h, face: 'top', polys });
+        }
+      }
+
+      drawHoveredOutline();
+      hoverHint.textContent = describeTarget(state.hoveredTarget);
+      updateStats();
+    }
+
+    function computePlanData() {
+      const entries = Array.from(state.heights.entries()).map(([k, h]) => ({ ...parseColumnKey(k), h }));
+      if (!entries.length) {
+        return { width: 1, depth: 1, maxH: 0, topGrid: [[0]], frontGrid: [[0]], sideGrid: [[0]] };
+      }
+      let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity, maxH = 0;
+      for (const e of entries) {
+        minX = Math.min(minX, e.x); maxX = Math.max(maxX, e.x);
+        minY = Math.min(minY, e.y); maxY = Math.max(maxY, e.y);
+        maxH = Math.max(maxH, e.h);
+      }
+      const width = maxX - minX + 1;
+      const depth = maxY - minY + 1;
+      const topGrid = Array.from({ length: depth }, () => Array(width).fill(0));
+      for (const e of entries) topGrid[maxY - e.y][e.x - minX] = 1;
+      const frontGrid = Array.from({ length: maxH || 1 }, () => Array(width).fill(0));
+      for (let x = minX; x <= maxX; x++) {
+        let colH = 0;
+        for (let y = minY; y <= maxY; y++) colH = Math.max(colH, getHeight(x, y));
+        for (let z = 0; z < colH; z++) frontGrid[maxH - 1 - z][x - minX] = 1;
+      }
+      const sideGrid = Array.from({ length: maxH || 1 }, () => Array(depth).fill(0));
+      for (let y = minY; y <= maxY; y++) {
+        let colH = 0;
+        for (let x = minX; x <= maxX; x++) colH = Math.max(colH, getHeight(x, y));
+        for (let z = 0; z < colH; z++) sideGrid[maxH - 1 - z][maxY - y] = 1;
+      }
+      return { width, depth, maxH, topGrid, frontGrid, sideGrid };
+    }
+
+    function drawOrthographicView(ctx2, grid, title, x, y, w, h) {
+      ctx2.save();
+      ctx2.fillStyle = 'white';
+      ctx2.fillRect(x, y, w, h);
+      ctx2.strokeStyle = '#111827';
+      ctx2.lineWidth = 1.5;
+      ctx2.strokeRect(x, y, w, h);
+      ctx2.fillStyle = '#111827';
+      ctx2.font = 'bold 22px Arial';
+      ctx2.fillText(title, x + 16, y + 30);
+
+      const rows = grid.length;
+      const cols = grid[0].length;
+      const padTop = 48;
+      const pad = 16;
+      const cell = Math.floor(Math.min((w - 2 * pad) / Math.max(cols, 1), (h - padTop - pad) / Math.max(rows, 1)));
+      const gridW = cols * cell;
+      const gridH = rows * cell;
+      const ox = x + (w - gridW) / 2;
+      const oy = y + padTop + (h - padTop - gridH) / 2;
+
+      drawViewGrid(ctx2, cols, rows, cell, ox, oy);
+      ctx2.fillStyle = '#ffffff';
+      ctx2.strokeStyle = '#111827';
+      ctx2.lineWidth = 2;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (grid[r][c]) {
+            ctx2.fillRect(ox + c * cell, oy + r * cell, cell, cell);
+            ctx2.strokeRect(ox + c * cell, oy + r * cell, cell, cell);
+          }
+        }
+      }
+      ctx2.restore();
+    }
+
+    function exportIsometricPng() {
+      const out = document.createElement('canvas');
+      out.width = canvas.width;
+      out.height = canvas.height;
+      const ctx2 = out.getContext('2d');
+      ctx2.fillStyle = '#ffffff';
+      ctx2.fillRect(0, 0, out.width, out.height);
+
+      const params = computeRenderParams(out.width, out.height);
+      const { scale, ox, oy } = params;
+      if (state.exportDots) {
+        drawProjectedDots(ctx2, out.width, out.height, params);
+      }
+      if (state.exportWalls) {
+        drawWallGuides(ctx2, out.width, out.height, params);
+      }
+
+      const drawList = [];
+      for (const [k, h] of state.heights.entries()) {
+        const { x, y } = parseColumnKey(k);
+        for (let z = 0; z < h; z++) drawList.push({ x, y, z, h });
+      }
+      drawList.sort((a, b) => {
+        const da = a.x + a.y + a.z;
+        const db = b.x + b.y + b.z;
+        if (da !== db) return da - db;
+        if (a.z !== b.z) return a.z - b.z;
+        return a.x - b.x;
+      });
+
+      const faceTop = getComputedStyle(document.documentElement).getPropertyValue('--face-top').trim();
+      const faceLeft = getComputedStyle(document.documentElement).getPropertyValue('--face-left').trim();
+      const faceRight = getComputedStyle(document.documentElement).getPropertyValue('--face-right').trim();
+      for (const cube of drawList) {
+        const polys = getCubePolygons(cube.x, cube.y, cube.z, scale, ox, oy);
+        fillPoly(polys.left, faceLeft, '#111827', 2, ctx2);
+        fillPoly(polys.right, faceRight, '#111827', 2, ctx2);
+        fillPoly(polys.top, faceTop, '#111827', 2, ctx2);
+      }
+
+      const link = document.createElement('a');
+      link.download = state.exportDots ? 'cube-solid-isometric-dotted.png' : 'cube-solid-isometric.png';
+      link.href = out.toDataURL('image/png');
+      link.click();
+    }
+
+    function exportViewsPng() {
+      const data = computePlanData();
+      const out = document.createElement('canvas');
+      out.width = 1400;
+      out.height = 520;
+      const ctx2 = out.getContext('2d');
+      ctx2.fillStyle = '#ffffff';
+      ctx2.fillRect(0, 0, out.width, out.height);
+      drawOrthographicView(ctx2, data.topGrid, 'Top View', 20, 20, 420, 480);
+      drawOrthographicView(ctx2, data.frontGrid, 'Front View', 490, 20, 420, 480);
+      drawOrthographicView(ctx2, data.sideGrid, 'Side View', 960, 20, 420, 480);
+      const link = document.createElement('a');
+      link.download = 'cube-solid-views.png';
+      link.href = out.toDataURL('image/png');
+      link.click();
+    }
+
+    function updateStats() {
+      const entries = Array.from(state.heights.values());
+      const cubes = totalCubes();
+      statCubes.textContent = cubes;
+      statColumns.textContent = state.heights.size;
+      statHeight.textContent = entries.length ? Math.max(...entries) : 0;
+      statFootprint.textContent = state.heights.size;
+      shapeTag.textContent = cubes ? `${cubes} cubes` : 'Empty';
+    }
+
+    function randomise() {
+      const n = Math.max(1, Math.min(60, parseInt(cubeCountInput.value || '8', 10)));
+      cubeCountInput.value = n;
+      const spread = parseInt(spreadInput.value, 10);
+      const solid = generateSolid(n, spread);
+      state.heights = new Map(solid.heights);
+      render();
+    }
+
+    function clearAll() {
+      state.heights = new Map();
+      render();
+    }
+
+    
+
+    function getCanvasPoint(event) {
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+      return {
+        x: (event.clientX - rect.left) * scaleX,
+        y: (event.clientY - rect.top) * scaleY
+      };
+    }
+
+    function updateHoverFromEvent(event) {
+      const pt = getCanvasPoint(event);
+      const nextHover = getHoverTargetAtPoint(pt);
+      const keyOf = (obj) => obj ? JSON.stringify({
+        type: obj.type,
+        face: obj.face,
+        x: obj.x ?? obj.target?.x,
+        y: obj.y ?? obj.target?.y,
+        h: obj.h ?? obj.target?.h,
+        kind: obj.target?.kind
+      }) : 'null';
+      if (keyOf(nextHover) !== keyOf(state.hoveredTarget)) {
+        state.hoveredTarget = nextHover;
+        render();
+      }
+      updateCursorLabel(event);
+    }
+
+    canvas.addEventListener('contextmenu', (event) => event.preventDefault());
+    canvas.addEventListener('mousemove', updateHoverFromEvent);
+    canvas.addEventListener('mouseleave', () => {
+      state.hoveredTarget = null;
+      cursorLabel.style.display = 'none';
+      render();
+    });
+
+    canvas.addEventListener('mousedown', (event) => {
+      const pt = getCanvasPoint(event);
+
+      if (event.button === 0) {
+        for (let i = state.addTargets.length - 1; i >= 0; i--) {
+          const item = state.addTargets[i];
+          if (pointInPolygon(pt.x, pt.y, item.poly)) {
+            setHeight(item.target.x, item.target.y, item.target.h);
+            render();
+            return;
+          }
+        }
+        for (let i = state.faceTargets.length - 1; i >= 0; i--) {
+          const item = state.faceTargets[i];
+          if (pointInPolygon(pt.x, pt.y, item.poly)) {
+            setHeight(item.target.x, item.target.y, item.target.h);
+            render();
+            return;
+          }
+        }
+      }
+
+      if (event.button === 2) {
+        for (let i = state.removeTargets.length - 1; i >= 0; i--) {
+          const item = state.removeTargets[i];
+          if (pointInPolygon(pt.x, pt.y, item.poly)) {
+            setHeight(item.x, item.y, item.h - 1);
+            render();
+            return;
+          }
+        }
+      }
+    });
+
+    generateBtn.addEventListener('click', randomise);
+    resetBtn.addEventListener('click', clearAll);
+    toggleWallsBtn.addEventListener('click', () => {
+      state.showWalls = !state.showWalls;
+      toggleWallsBtn.textContent = state.showWalls ? 'Hide Walls' : 'Show Walls';
+      render();
+    });
+    cubeCountInput.addEventListener('change', randomise);
+    spreadInput.addEventListener('input', randomise);
+    downloadBtn.addEventListener('click', exportIsometricPng);
+    exportViewsBtn.addEventListener('click', exportViewsPng);
+
+    toggleGuidesBtn.addEventListener('click', () => {
+      state.showGuides = !state.showGuides;
+      toggleGuidesBtn.textContent = state.showGuides ? 'Hide Guides' : 'Show Guides';
+      render();
+    });
+
+    toggleDotsBtn.addEventListener('click', () => {
+      state.showDots = !state.showDots;
+      toggleDotsBtn.textContent = state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid';
+      render();
+    });
+
+    toggleExportDotsBtn.addEventListener('click', () => {
+      state.exportDots = !state.exportDots;
+      toggleExportDotsBtn.textContent = state.exportDots ? 'Export With Dots' : 'Export Without Dots';
+    });
+
+    toggleExportWallsBtn.addEventListener('click', () => {
+      state.exportWalls = !state.exportWalls;
+      toggleExportWallsBtn.textContent = state.exportWalls ? 'Export With Walls' : 'Export Without Walls';
+    });
+
+    randomise();
+  </script>
+</body>
+</html>
