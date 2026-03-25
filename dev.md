@@ -129,3 +129,4 @@ NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX  # GA4 Measurement ID (replace when ready)
 |----|--------|-------------|-------|
 | B001 | Fixed | Circuit suite iframe state loss on tab switch | Fixed by rendering both iframes simultaneously, toggling with CSS display:none |
 | B002 | Fixed | Electromagnet coil flat rendering (no depth) | Fixed draw order: back arches → rod (white fill) → front arches |
+| B003 | Reverted | Electromagnet integration removed from circuit tools | Symbol style did not match required exam format (hatched steel rod + stacked cell symbols). To be redesigned before re-integrating. |
