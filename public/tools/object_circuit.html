@@ -138,7 +138,6 @@
       <button class="tool-btn" data-tool="battery">Battery</button>
       <button class="tool-btn" data-tool="switch-open">Switch Open</button>
       <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
-      <button class="tool-btn" data-tool="electromagnet">Electromagnet</button>
       <button class="tool-btn" data-tool="delete">Delete</button>
     </div>
 
@@ -149,10 +148,6 @@
     </div>
     <div class="action-row single">
       <button class="action-btn" id="toggleGridBtn">Hide Grid</button>
-    </div>
-    <div class="field">
-      <label for="electromagnetCoils">Electromagnet coil turns</label>
-      <input id="electromagnetCoils" type="number" min="4" max="20" value="8" />
     </div>
 
     <h2>Edit</h2>
@@ -212,8 +207,7 @@
       redoBtn: document.getElementById('redoBtn'),
       clearBtn: document.getElementById('clearBtn'),
       exportBtn: document.getElementById('exportBtn'),
-      fitBtn: document.getElementById('fitBtn'),
-      electromagnetCoils: document.getElementById('electromagnetCoils')
+      fitBtn: document.getElementById('fitBtn')
     };
 
     function deepClone(obj) {
@@ -381,10 +375,9 @@
       return { x: snap(p.x), y: snap(p.y) };
     }
 
-    function componentSize(type, coils = 8) {
+    function componentSize(type) {
       if (type === 'bulb') return { w: 92, h: 92 };
       if (type === 'battery') return { w: 52, h: 92 };
-      if (type === 'electromagnet') return { w: coils * 18 + 24, h: 68 };
       return { w: 80, h: 30 };
     }
 
@@ -428,13 +421,6 @@
           { x: 40, y: 0 }
         ];
       }
-      if (comp.type === 'electromagnet') {
-        const hw = ((comp.coils || 8) * 18 + 24) / 2;
-        return [
-          { x: -hw, y: 0 },
-          { x: hw, y: 0 }
-        ];
-      }
       return [];
     }
 
@@ -458,7 +444,7 @@
     }
 
     function getComponentBounds(comp) {
-      const size = componentSize(comp.type, comp.coils || 8);
+      const size = componentSize(comp.type);
       const rotated = comp.rotation % 180 === 0
         ? { w: size.w + 20, h: size.h + 20 }
         : { w: size.h + 20, h: size.w + 20 };
@@ -491,8 +477,7 @@
         x: p.x,
         y: p.y,
         rotation: state.rotation,
-        variant: type,
-        coils: type === 'electromagnet' ? Math.max(4, Math.min(20, Number(ui.electromagnetCoils.value) || 8)) : undefined
+        variant: type
       };
       autoAlignComponent(comp);
       state.components.push(comp);
@@ -565,7 +550,7 @@
         return;
       }
 
-      if (['bulb', 'battery', 'switch-open', 'switch-closed', 'electromagnet'].includes(state.tool)) {
+      if (['bulb', 'battery', 'switch-open', 'switch-closed'].includes(state.tool)) {
         const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
         addComponent(type, p);
         const comp = state.components[state.components.length - 1];
@@ -696,7 +681,6 @@
         if (comp.type === 'bulb') drawBulbObject(wrap);
         if (comp.type === 'battery') drawBatteryObject(wrap);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
-        if (comp.type === 'electromagnet') drawElectromagnetObject(wrap, comp.coils || 8);
         svg.appendChild(wrap);
       }
     }
@@ -743,51 +727,6 @@
         x1: -12, y1: 0, x2: 12, y2: closed ? 0 : -12,
         stroke: '#111827', 'stroke-width': 3, 'stroke-linecap': 'round'
       }));
-    }
-
-    // Draws a 3-D coil-around-rod electromagnet symbol.
-    // Draw order: back arches → white-filled rod → front arches = depth illusion.
-    function drawElectromagnetObject(g, coils) {
-      const w = coils * 18 + 24;
-      const END_CAP = 10;
-      const coilX = -w / 2 + END_CAP;
-      const coilW = w - END_CAP * 2;
-      const turnW = coilW / coils;
-      const ROD_H = 24;
-      const BOT = ROD_H / 2 + 16;   // bottom of back arches
-      const TOP = -(ROD_H / 2 + 16); // top of front arches
-
-      // 1. Back arches (below rod)
-      for (let i = 0; i < coils; i++) {
-        const x0 = coilX + i * turnW;
-        const x1 = x0 + turnW;
-        const xm = (x0 + x1) / 2;
-        g.appendChild(make('path', {
-          d: `M ${x0} 0 C ${x0+turnW*0.2} 0 ${x0+turnW*0.2} ${BOT} ${xm} ${BOT} C ${x0+turnW*0.8} ${BOT} ${x0+turnW*0.8} 0 ${x1} 0`,
-          fill: 'none', stroke: '#111827', 'stroke-width': 2.5, 'stroke-linecap': 'round'
-        }));
-      }
-
-      // Lead lines connecting to connection points at (±w/2, 0)
-      g.appendChild(make('line', { x1: -w/2, y1: 0, x2: coilX, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
-      g.appendChild(make('line', { x1: coilX + coilW, y1: 0, x2: w/2, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
-
-      // 2. Iron core rod — white fill covers back arches, giving depth
-      g.appendChild(make('rect', {
-        x: coilX - 2, y: -ROD_H / 2, width: coilW + 4, height: ROD_H,
-        fill: 'white', stroke: '#444', 'stroke-width': 2.5
-      }));
-
-      // 3. Front arches (above rod)
-      for (let i = 0; i < coils; i++) {
-        const x0 = coilX + i * turnW;
-        const x1 = x0 + turnW;
-        const xm = (x0 + x1) / 2;
-        g.appendChild(make('path', {
-          d: `M ${x0} 0 C ${x0+turnW*0.2} 0 ${x0+turnW*0.2} ${TOP} ${xm} ${TOP} C ${x0+turnW*0.8} ${TOP} ${x0+turnW*0.8} 0 ${x1} 0`,
-          fill: 'none', stroke: '#111827', 'stroke-width': 2.5, 'stroke-linecap': 'round'
-        }));
-      }
     }
 
     function make(tag, attrs = {}) {
