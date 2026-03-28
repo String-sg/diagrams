@@ -298,6 +298,7 @@
         <button class="tool-btn" data-tool="ldr">LDR</button>
         <button class="tool-btn" data-tool="capacitor">Capacitor</button>
         <button class="tool-btn" data-tool="diode">Diode</button>
+        <button class="tool-btn" data-tool="transistor">Transistor</button>
         <button class="tool-btn" data-tool="fuse">Fuse</button>
       </div>
       <div class="tool-subgroup-label">Output and other components</div>
@@ -306,6 +307,7 @@
         <button class="tool-btn" data-tool="bell">Bell</button>
         <button class="tool-btn" data-tool="heater">Heater</button>
         <button class="tool-btn" data-tool="magnetising-coil">Mag Coil</button>
+        <button class="tool-btn" data-tool="transformer">Transformer</button>
       </div>
     </div>
 
@@ -601,12 +603,21 @@
       if (type === 'battery') return { w: 27.2 + cells * 14.4, h: 35.2 };
       if (['dc-supply', 'power-supply', 'ac-supply', 'capacitor'].includes(type)) return { w: 67.2, h: 35.2 };
       if (['resistor', 'variable-resistor', 'potentiometer', 'thermistor', 'ldr', 'heater', 'fuse', 'diode', 'led', 'switch'].includes(type)) return { w: 67.2, h: 35.2 };
+      if (type === 'transistor') return { w: 67.2, h: 44.8 };
       if (type === 'bell') return { w: 38.4, h: 38.4 };
       if (type === 'magnetising-coil') return { w: 73.6, h: 27.2 };
+      if (type === 'transformer') return { w: 67.2, h: 89.6 };
       if (type === 'ground') return { w: 35.2, h: 35.2 };
       if (type === 'junction') return { w: 16, h: 16 };
       if (type === 'arrow' || type === 'divider-arrow' || type === 'label-line') return { w: 44.8, h: 19.2 };
       return { w: 64, h: 24 };
+    }
+
+    function rotatePoint(x, y, rotation) {
+      const rad = rotation * Math.PI / 180;
+      const cos = Math.cos(rad);
+      const sin = Math.sin(rad);
+      return { x: x * cos - y * sin, y: x * sin + y * cos };
     }
 
     function getComponentNodes(comp) {
@@ -618,6 +629,27 @@
       }
       if (comp.type === 'junction') {
         return [{ x: comp.x, y: comp.y }];
+      }
+      if (comp.type === 'transistor') {
+        const localNodes = [
+          { x: -22.4, y: 0 },
+          { x: 22.4, y: -22.4 },
+          { x: 22.4, y: 22.4 }
+        ];
+        return localNodes.map(node => {
+          const rotated = rotatePoint(node.x, node.y, comp.rotation || 0);
+          return { x: comp.x + rotated.x, y: comp.y + rotated.y };
+        });
+      }
+      if (comp.type === 'transformer') {
+        const localNodes = [
+          { x: -22.4, y: -44.8 },
+          { x: -22.4, y: 44.8 }
+        ];
+        return localNodes.map(node => {
+          const rotated = rotatePoint(node.x, node.y, comp.rotation || 0);
+          return { x: comp.x + rotated.x, y: comp.y + rotated.y };
+        });
       }
       if (comp.type === 'arrow' || comp.type === 'divider-arrow' || comp.type === 'label-line' || comp.type === 'textbox') {
         return [];
@@ -890,7 +922,7 @@
         return;
       }
 
-      if (['textbox', 'bulb', 'battery', 'dc-supply', 'power-supply', 'ac-supply', 'capacitor', 'resistor', 'potentiometer', 'bell', 'thermistor', 'ldr', 'heater', 'magnetising-coil', 'ground', 'junction', 'ammeter', 'voltmeter', 'diode', 'fuse', 'switch-open', 'switch-closed', 'galvanometer', 'motor'].includes(state.tool)) {
+      if (['textbox', 'bulb', 'battery', 'dc-supply', 'power-supply', 'ac-supply', 'capacitor', 'resistor', 'potentiometer', 'bell', 'thermistor', 'ldr', 'heater', 'magnetising-coil', 'transformer', 'ground', 'junction', 'ammeter', 'voltmeter', 'diode', 'transistor', 'fuse', 'switch-open', 'switch-closed', 'galvanometer', 'motor'].includes(state.tool)) {
         const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
         addComponent(type, p);
         const comp = state.components[state.components.length - 1];
@@ -1180,7 +1212,7 @@
           continue;
         }
         const wrap = make('g', { transform: `translate(${comp.x} ${comp.y}) rotate(${comp.rotation})` });
-        const scaled = make('g', { transform: 'scale(0.8)' });
+        const scaled = make('g', { transform: (comp.type === 'transistor' || comp.type === 'transformer') ? 'scale(1)' : 'scale(0.8)' });
         wrap.appendChild(scaled);
         const inner = (comp.polarityFlipped && ['dc-supply', 'ac-supply'].includes(comp.type))
           ? make('g', { transform: 'scale(-1 1)' })
@@ -1200,6 +1232,7 @@
         if (comp.type === 'ldr') drawLdr(inner);
         if (comp.type === 'heater') drawHeater(inner);
         if (comp.type === 'magnetising-coil') drawMagnetisingCoil(inner);
+        if (comp.type === 'transformer') drawTransformer(inner);
         if (comp.type === 'ground') drawGround(inner);
         if (comp.type === 'junction') drawJunction(inner);
         if (comp.type === 'ammeter') drawMeter(inner, 'A');
@@ -1208,6 +1241,7 @@
         if (comp.type === 'motor') drawMeter(inner, 'M');
         if (comp.type === 'diode') drawDiode(inner, false);
         if (comp.type === 'led') drawDiode(inner, true);
+        if (comp.type === 'transistor') drawTransistor(inner);
         if (comp.type === 'fuse') drawFuse(inner);
         if (comp.type === 'switch') drawSwitch(inner, comp.variant === 'switch-closed');
         svg.appendChild(wrap);
@@ -1434,6 +1468,37 @@
       g.appendChild(make('line', { x1: 32, y1: 0, x2: 46, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
     }
 
+    function drawTransformer(g) {
+      g.appendChild(make('path', {
+        d: `
+          M -22.4 -44.8
+          H 1.6
+          C 9.6 -44.8, 15.6 -40.0, 15.6 -33.6
+          C 15.6 -27.2, 9.6 -22.4, 1.6 -22.4
+
+          C 9.6 -22.4, 15.6 -17.6, 15.6 -11.2
+          C 15.6 -4.8, 9.6 0, 1.6 0
+
+          C 9.6 0, 15.6 4.8, 15.6 11.2
+          C 15.6 17.6, 9.6 22.4, 1.6 22.4
+
+          C 9.6 22.4, 15.6 27.2, 15.6 33.6
+          C 15.6 40.0, 9.6 44.8, 1.6 44.8
+
+          H -22.4
+        `,
+        fill: 'none',
+        stroke: '#111827',
+        'stroke-width': WIRE_STROKE,
+        'stroke-linecap': 'round',
+        'stroke-linejoin': 'round'
+      }));
+      g.appendChild(make('line', {
+        x1: 25.6, y1: -44.8, x2: 25.6, y2: 44.8,
+        stroke: '#111827', 'stroke-width': WIRE_STROKE, 'stroke-linecap': 'round'
+      }));
+    }
+
 
     function drawGround(g) {
       g.appendChild(make('line', { x1: 0, y1: -22, x2: 0, y2: -6, stroke: '#111827', 'stroke-width': 3 }));
@@ -1468,12 +1533,23 @@
       }
     }
 
+    function drawTransistor(g) {
+      const sw = WIRE_STROKE;
+      // Base node at one grid step left of centre; collector and emitter nodes at one grid step right.
+      // The diagonals run directly to those node positions with no extra horizontal stubs.
+      g.appendChild(make('line', { x1: -22.4, y1: 0, x2: -5.6, y2: 0, stroke: '#111827', 'stroke-width': sw, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: -5.6, y1: -16.8, x2: -5.6, y2: 16.8, stroke: '#111827', 'stroke-width': sw, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: -5.6, y1: -5.6, x2: 22.4, y2: -22.4, stroke: '#111827', 'stroke-width': sw, 'stroke-linecap': 'round' }));
+      g.appendChild(make('line', { x1: -5.6, y1: 5.6, x2: 22.4, y2: 22.4, stroke: '#111827', 'stroke-width': sw, 'stroke-linecap': 'round' }));
+    }
+
     function drawFuse(g) {
       g.appendChild(make('line', { x1: -42, y1: 0, x2: -22, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
       g.appendChild(make('line', { x1: 22, y1: 0, x2: 42, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
       g.appendChild(make('rect', { x: -22, y: -7, width: 44, height: 14, fill: 'none', stroke: '#111827', 'stroke-width': 2.3 }));
       g.appendChild(make('line', { x1: -18, y1: 0, x2: 18, y2: 0, stroke: '#111827', 'stroke-width': 2.2 }));
     }
+
 
     function make(tag, attrs = {}) {
       const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
@@ -1534,7 +1610,7 @@
     }
 
     setStatus(`Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points. Use <strong>Arrow</strong> to draw free-position arrows that do not snap to the grid. Use <strong>Label Line</strong> for a free-position callout line without an arrowhead. Use <strong>Grid Arrow</strong> for a grid-snapped arrow. Type labels in the <strong>Text</strong> panel, click <strong>Add Text</strong>, then click the canvas to place them. Select a textbox and use <strong>Update Selected</strong> to revise it. Use <strong>Flip Power Supply</strong> to mirror AC and DC supply symbols left-to-right. Use <strong>Rotate 180°</strong> for reversed orientation directly. Use the <strong>+</strong> and <strong>−</strong> buttons above the canvas to zoom the workspace in and out.<br><br>
-      Tips: <span class="kbd">Delete</span> removes the selected item. <span class="kbd">R</span> rotates 90°. <span class="kbd">Ctrl/Cmd+C</span> copies a selected arrow. <span class="kbd">Ctrl/Cmd+V</span> pastes an arrow. <span class="kbd">Ctrl/Cmd+Z</span> undo. <br><br> Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>`);
+      Tips: <span class="kbd">Delete</span> removes the selected item. <span class="kbd">R</span> rotates 90°. <span class="kbd">Ctrl/Cmd+C</span> copies a selected arrow. <span class="kbd">Ctrl/Cmd+V</span> pastes an arrow. <span class="kbd">Ctrl/Cmd+Z</span> undo. <br><br> Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a> with contributions by Tan Seng Kwang`);
     updateViewFromZoom();
     render();
   </script>
