@@ -12,6 +12,7 @@ export default function WaterTankPage() {
         <iframe
           src="/tools/water_tank_generator.html"
           className="absolute inset-0 w-full h-full border-0"
+          title="Water Tank Diagram Generator"
         />
       </div>
     </div>
