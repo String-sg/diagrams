@@ -8,4 +8,5 @@ module.exports = createJestConfig({
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
   },
+  testPathIgnorePatterns: ['/node_modules/', '/__tests__/canvas/helpers\\.js$'],
 })

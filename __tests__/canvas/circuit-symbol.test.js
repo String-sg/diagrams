@@ -19,14 +19,22 @@ beforeAll(() => {
     <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
     <button class="tool-btn" data-tool="delete">Delete</button>
     <button id="rotateBtn">Rotate</button>
+    <button id="rotate180Btn">Rotate 180°</button>
     <button id="toggleGridBtn">Hide Grid</button>
     <input id="batteryCells" type="number" value="2" />
+    <input id="textValue" type="text" value="Type here" />
+    <input id="fontSize" type="number" value="12" />
+    <button id="addTextBtn">Add Text</button>
+    <button id="updateTextBtn">Update Selected</button>
     <button id="undoBtn">Undo</button>
     <button id="redoBtn">Redo</button>
     <button id="clearBtn">Clear</button>
     <button id="exportBtn">Export PNG</button>
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
+    <button id="zoomInBtn">+</button>
+    <button id="zoomOutBtn">−</button>
+    <button id="zoomResetBtn">100%</button>
   `;
   ({ snap, gcd, componentSize, getComponentNodes, GRID } = loadCircuitScript(
     'circuit_diagram_creatorv2.html',

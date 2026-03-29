@@ -100,17 +100,17 @@ describe('MetricsPage', () => {
 
   it('shows monthly MAU from monthly data', async () => {
     mockSql
-      .mockResolvedValueOnce([{ unique_users: 5, total_exports: 50, mau: 3, monthly_exports: 10 }])
+      .mockResolvedValueOnce([{ unique_users: 5, total_exports: 50, mau: 11, monthly_exports: 10 }])
       .mockResolvedValueOnce([{ tool: 'circuit-symbol', exports: 30, unique_users: 5 }])
       .mockResolvedValueOnce([
-        { tool: 'circuit-symbol', exports: 8, mau: 3 },
+        { tool: 'circuit-symbol', exports: 17, mau: 13 },
         { tool: 'circuit-object', exports: 2, mau: 1 },
       ])
 
     render(await MetricsPage())
 
-    expect(screen.getByText('8')).toBeInTheDocument()
-    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getByText('17')).toBeInTheDocument()
+    expect(screen.getByText('13')).toBeInTheDocument()
   })
 
   it('defaults tool cells to 0 when tool has no data in DB result', async () => {

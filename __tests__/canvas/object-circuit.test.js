@@ -21,12 +21,19 @@ beforeAll(() => {
     <button id="rotateBtn">Rotate 90°</button>
     <button id="flipBtn">Flip 180°</button>
     <button id="toggleGridBtn">Hide Grid</button>
+    <input id="textValue" type="text" value="Type here" />
+    <input id="fontSize" type="number" value="12" />
+    <button id="addTextBtn">Add Text</button>
+    <button id="updateTextBtn">Update Selected</button>
     <button id="undoBtn">Undo</button>
     <button id="redoBtn">Redo</button>
     <button id="clearBtn">Clear All</button>
     <button id="exportBtn">Export PNG</button>
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
+    <button id="zoomInBtn">+</button>
+    <button id="zoomOutBtn">−</button>
+    <button id="zoomResetBtn">100%</button>
   `;
   ({ rotatePoint, getLocalNodes, getComponentNodes } = loadCircuitScript(
     'object_circuitv2.html',
