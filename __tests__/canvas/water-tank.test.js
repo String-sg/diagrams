@@ -116,7 +116,9 @@ describe('water level rendering', () => {
   it('omits the water polygon at 0%', () => {
     fireInput('waterPercent', '0')
     const svg = document.getElementById('svgWrap').innerHTML
-    expect(svg).not.toContain('<polygon')
+    // Only the <clipPath> definition polygon remains; no visible water polygons.
+    const count = (svg.match(/<polygon/g) || []).length
+    expect(count).toBe(1)
   })
 
   it('restores water polygon when percent returns above 0', () => {

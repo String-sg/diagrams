@@ -31,13 +31,9 @@ beforeAll(() => {
     <button id="exportBtn">Export PNG</button>
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
-    <button id="zoomInBtn">Zoom In</button>
-    <button id="zoomOutBtn">Zoom Out</button>
-    <button id="zoomResetBtn">Reset Zoom</button>
-    <input id="textValue" />
-    <select id="fontSize"></select>
-    <button id="addTextBtn">Add Text</button>
-    <button id="updateTextBtn">Update Text</button>
+    <button id="zoomInBtn">+</button>
+    <button id="zoomOutBtn">−</button>
+    <button id="zoomResetBtn">100%</button>
   `;
   ({ rotatePoint, getLocalNodes, getComponentNodes } = loadCircuitScript(
     'object_circuitv2.html',
@@ -79,15 +75,21 @@ describe('getLocalNodes()', () => {
   it('battery has 2 connection points (top and bottom terminals)', () => {
     const nodes = getLocalNodes({ type: 'battery' })
     expect(nodes).toHaveLength(2)
-    expect(nodes[0]).toEqual({ x: 0, y: -46 })
-    expect(nodes[1]).toEqual({ x: 0, y: 46 })
+    // COMPONENT_SCALE=0.8 applied: 46 * 0.8 = 36.8
+    expect(nodes[0].x).toBeCloseTo(0)
+    expect(nodes[0].y).toBeCloseTo(-36.8)
+    expect(nodes[1].x).toBeCloseTo(0)
+    expect(nodes[1].y).toBeCloseTo(36.8)
   })
 
   it('switch has 2 connection points', () => {
     const nodes = getLocalNodes({ type: 'switch' })
     expect(nodes).toHaveLength(2)
-    expect(nodes[0]).toEqual({ x: -40, y: 0 })
-    expect(nodes[1]).toEqual({ x: 40, y: 0 })
+    // COMPONENT_SCALE=0.8 applied: 40 * 0.8 = 32
+    expect(nodes[0].x).toBeCloseTo(-32)
+    expect(nodes[0].y).toBeCloseTo(0)
+    expect(nodes[1].x).toBeCloseTo(32)
+    expect(nodes[1].y).toBeCloseTo(0)
   })
 
   it('unknown component returns empty array', () => {
