@@ -635,7 +635,6 @@
       }
       if (state.dragging.mode === 'move-component' || state.dragging.mode === 'move-arrow') {
         if (state.dragging.mode === 'move-component') rebuildJunctions();
-        saveHistory(); const snapshot = state.history.pop(); state.history.push(snapshot);
       }
       state.dragging = null;
       render();
