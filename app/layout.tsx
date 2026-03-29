@@ -19,10 +19,9 @@ export const metadata: Metadata = {
       { url: '/apple-touch-icon-ipad-76x76.png', sizes: '76x76' },
       { url: '/apple-touch-icon-ipad-retina-152x152.png', sizes: '152x152' },
     ],
-  },
-  other: {
-    msapplication-TileImage: '/mstile-150x150.png',
-    msapplication-TileColor: '#ffffff',
+    other: [
+      { rel: 'msapplication-TileImage', url: '/mstile-150x150.png' },
+    ],
   },
 }
 
