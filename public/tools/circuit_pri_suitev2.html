@@ -63,12 +63,22 @@
       border-color: var(--accent);
       box-shadow: 0 1px 4px rgba(0,0,0,0.08);
     }
+    .frame-wrap {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
     iframe {
+      position: absolute;
+      inset: 0;
       width: 100%;
       height: 100%;
       border: 0;
-      display: block;
       background: white;
+    }
+    iframe.hidden {
+      display: none;
     }
     .fallback {
       padding: 18px;
@@ -89,7 +99,7 @@
   <div class="shell">
     <div class="title-wrap">
       <h1>Circuit Diagram Suite</h1>
-      <p>Switch between symbol view and object view. Note that work will be lost if you toggle between the two modes as there is no save function.</p>
+      <p>Switch between symbol view and object view. Your work is preserved when toggling.</p>
     </div>
     <div class="toggle" role="tablist" aria-label="Diagram mode">
       <button class="mode-btn active" id="symbolBtn" role="tab" aria-selected="true">Circuit Diagram</button>
@@ -97,25 +107,25 @@
     </div>
   </div>
 
-  <iframe id="toolFrame" title="Circuit diagram tool"></iframe>
+  <div class="frame-wrap">
+    <iframe id="symbolFrame" src="circuit_diagram_creatorv2.html" title="Circuit Diagram (Symbol)"></iframe>
+    <iframe id="objectFrame" src="object_circuitv2.html" title="Circuit Diagram (Object)" class="hidden"></iframe>
+  </div>
   <div class="fallback" id="fallbackBox">
     Conceptualised and vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>
   </div>
 
   <script>
-    const frame = document.getElementById('toolFrame');
+    const symbolFrame = document.getElementById('symbolFrame');
+    const objectFrame = document.getElementById('objectFrame');
     const symbolBtn = document.getElementById('symbolBtn');
     const objectBtn = document.getElementById('objectBtn');
     const fallbackBox = document.getElementById('fallbackBox');
 
-    const modes = {
-      symbol: 'circuit_diagram_creatorv2.html',
-      object: 'object_circuitv2.html'
-    };
-
     function setMode(mode) {
       const isSymbol = mode === 'symbol';
-      frame.src = modes[mode];
+      symbolFrame.classList.toggle('hidden', !isSymbol);
+      objectFrame.classList.toggle('hidden', isSymbol);
       symbolBtn.classList.toggle('active', isSymbol);
       objectBtn.classList.toggle('active', !isSymbol);
       symbolBtn.setAttribute('aria-selected', String(isSymbol));
@@ -123,11 +133,7 @@
       document.title = isSymbol ? 'Circuit Diagram Suite – Circuit Diagram' : 'Circuit Diagram Suite – Object Diagram';
     }
 
-    frame.addEventListener('error', () => {
-      fallbackBox.style.display = 'block';
-    });
-
-    setTimeout(() => {
+    function checkFallback(frame) {
       try {
         const doc = frame.contentDocument;
         if (!doc || !doc.body || !doc.body.children.length) {
@@ -136,12 +142,15 @@
       } catch (e) {
         fallbackBox.style.display = 'block';
       }
-    }, 1200);
+    }
+
+    symbolFrame.addEventListener('error', () => { fallbackBox.style.display = 'block'; });
+    objectFrame.addEventListener('error', () => { fallbackBox.style.display = 'block'; });
+
+    setTimeout(() => { checkFallback(symbolFrame); checkFallback(objectFrame); }, 1200);
 
     symbolBtn.addEventListener('click', () => setMode('symbol'));
     objectBtn.addEventListener('click', () => setMode('object'));
-
-    setMode('symbol');
   </script>
 </body>
 </html>
