@@ -31,9 +31,13 @@ beforeAll(() => {
     <button id="exportBtn">Export PNG</button>
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
-    <button id="zoomInBtn">+</button>
-    <button id="zoomOutBtn">−</button>
-    <button id="zoomResetBtn">100%</button>
+    <button id="zoomInBtn">Zoom In</button>
+    <button id="zoomOutBtn">Zoom Out</button>
+    <button id="zoomResetBtn">Reset Zoom</button>
+    <input id="textValue" />
+    <select id="fontSize"></select>
+    <button id="addTextBtn">Add Text</button>
+    <button id="updateTextBtn">Update Text</button>
   `;
   ({ rotatePoint, getLocalNodes, getComponentNodes } = loadCircuitScript(
     'object_circuitv2.html',
