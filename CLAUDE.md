@@ -44,18 +44,22 @@ Each Next.js tool page (`app/tools/<name>/page.tsx`) renders a header with a bac
 ```
 
 Valid `tool-id` values (must match `VALID_TOOLS` in `app/api/event/route.ts`):
-- `circuit-symbol`
-- `circuit-object`
+- `circuit-symbol` — primary school symbol circuit diagram
+- `circuit-object` — primary school object circuit diagram
+- `circuit-secjc` — Sec/JC circuit diagram
+- `water-tank` — water tank diagram generator
 - `isometric-cube`
 
 New tools added to `public/tools/` also need a new `tool-id` added to `VALID_TOOLS`.
 
-### Circuit tools — two tiers
+### Tool pages
 
-- **Primary school** (`/tools/circuits`): wraps `circuit_pri_suitev2.html`, which is a shell that iframes `circuit_diagram_creatorv2.html` (symbol) and `object_circuitv2.html` (object). The toggle lives inside the suite HTML itself. Note: switching modes inside the suite loses canvas state (single iframe with changing `src`).
-- **Sec/JC** (`/tools/circuits-secjc`): wraps `circuit_diagram_secjc.html` directly. 3-column layout with extended components (transistor, transformer, potentiometer, LED, etc.).
+- **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that iframes `circuit_diagram_creatorv2.html` (symbol) or `object_circuitv2.html` (object). Toggle lives in the suite HTML. Switching modes loses canvas state.
+- **`/tools/circuits-secjc`** — wraps `circuit_diagram_secjc.html`. 3-column layout with extended components (transistor, transformer, potentiometer, LED, etc.).
+- **`/tools/water-tank`** — wraps `water_tank_generator.html`. Depends on `tap.png` being co-located in `public/tools/`.
+- **`/tools/isometric-cube`** — wraps `isometric_cube.html`.
 
-The old `circuit-diagram-suite.html` is archived in `_archive/`.
+The old suite (`circuit-diagram-suite.html`) and original companions (`circuit_diagram_creator.html`, `object_circuit.html`) remain at the repo root as reference; the deployed versions in `public/tools/` are the `v2` copies.
 
 ### Metrics system
 
@@ -74,9 +78,9 @@ The old `circuit-diagram-suite.html` is archived in `_archive/`.
 
 ## Tests
 
-Three suites in `__tests__/`:
-- `api/event.test.ts` — API route: input validation, rate-limit behaviour, happy-path DB call sequence. DB is mocked via `jest.mock('@/lib/db')`.
+Three suites in `__tests__/` (24 tests total):
+- `api/event.test.ts` — API route: input validation, rate-limit behaviour, happy-path DB call sequence, all 5 valid tool names accepted. DB is mocked via `jest.mock('@/lib/db')`.
 - `tracker.test.js` — tracker.js: UUID lifecycle, fetch fired per export button ID, no-op when `tool-id` meta is absent. Evaluated with `eval()` in jsdom.
-- `pages/index.test.tsx` — smoke test: all tool cards render with correct hrefs.
+- `pages/index.test.tsx` — smoke test: all 4 tool cards render with correct titles and hrefs.
 
 The metrics page and HTML canvas logic are **not unit-tested** — validate manually after changes.
