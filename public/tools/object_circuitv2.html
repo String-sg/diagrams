@@ -2,10 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="tool-id" content="circuit-object" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Circuit Object Diagram Generator</title>
-  <meta name="tool-id" content="object_circuitv2" />
   <style>
     :root {
       --panel: #f3f4f6;
@@ -23,18 +21,22 @@
       color: #111827;
       height: 100vh;
       display: grid;
-      grid-template-columns: 280px 1fr;
+      grid-template-columns: 200px 1fr;
     }
     .sidebar {
       border-right: 1px solid var(--border);
       background: var(--panel);
-      padding: 14px;
+      padding: 6px;
       overflow: auto;
     }
-    .sidebar h1 { margin: 0 0 12px; font-size: 20px; }
+    .sidebar h1 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      line-height: 1.15;
+    }
     .sidebar h2 {
-      margin: 18px 0 8px;
-      font-size: 14px;
+      margin: 8px 0 3px;
+      font-size: 9px;
       text-transform: uppercase;
       letter-spacing: .04em;
       color: var(--muted);
@@ -42,16 +44,17 @@
     .tool-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
+      gap: 4px;
     }
     button, input { font: inherit; }
     .tool-btn, .action-btn {
       border: 1px solid var(--border);
+      font-size: 11px;
       background: white;
-      padding: 10px 8px;
-      border-radius: 10px;
+      padding: 4px 5px;
+      border-radius: 6px;
       cursor: pointer;
-      min-height: 44px;
+      min-height: 26px;
     }
     .tool-btn.active, .action-btn.active {
       outline: 2px solid var(--accent);
@@ -61,32 +64,32 @@
     .action-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-    .action-row.single { grid-template-columns: 1fr; }
-    .field { margin: 8px 0; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      color: var(--muted);
+      gap: 5px;
       margin-bottom: 4px;
     }
-    .field input[type="number"] {
+    .action-row.single { grid-template-columns: 1fr; }
+    .field { margin: 4px 0; }
+    .field label {
+      display: block;
+      font-size: 9px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .field input[type="number"], .field input[type="text"] {
       width: 100%;
-      padding: 8px 10px;
-      border-radius: 8px;
+      padding: 4px 6px;
+      border-radius: 6px;
       border: 1px solid var(--border);
       background: white;
     }
     .status {
-      margin-top: 10px;
-      padding: 10px;
-      border-radius: 10px;
+      margin-top: 6px;
+      padding: 6px;
+      border-radius: 6px;
       background: white;
       border: 1px solid var(--border);
-      font-size: 13px;
-      line-height: 1.35;
+      font-size: 11px;
+      line-height: 1.25;
       color: #374151;
     }
     .workspace {
@@ -103,31 +106,34 @@
     }
     .topbar {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      top: 6px;
+      right: 6px;
       display: flex;
-      gap: 8px;
+      gap: 4px;
       z-index: 5;
     }
     .topbar button {
       border: 1px solid var(--border);
       background: white;
-      padding: 9px 12px;
-      border-radius: 10px;
+      font-size: 11px;
+      padding: 4px 7px;
+      border-radius: 6px;
       cursor: pointer;
       box-shadow: 0 2px 10px rgba(0,0,0,0.06);
     }
     .kbd {
       display: inline-block;
-      min-width: 1.4em;
-      padding: 1px 5px;
+      min-width: 1.1em;
+      padding: 0 3px;
       border-radius: 6px;
       background: #e5e7eb;
-      font-size: 11px;
+      font-size: 9px;
     }
   </style>
+  <meta name="tool-id" content="circuit-object" />
 </head>
 <body>
+  
   <aside class="sidebar">
     <h1>Circuit Object Diagram Generator</h1>
 
@@ -135,17 +141,39 @@
     <div class="tool-grid" id="toolGrid">
       <button class="tool-btn active" data-tool="select">Select / Move</button>
       <button class="tool-btn" data-tool="wire">Wire</button>
+      <button class="tool-btn" data-tool="arrow">Arrow</button>
+      <button class="tool-btn" data-tool="label-line">Label Line</button>
+      <button class="tool-btn" data-tool="grid-arrow">Grid Arrow</button>
+      <button class="tool-btn" data-tool="textbox">Textbox</button>
+      <button class="tool-btn" data-tool="delete">Delete</button>
+    </div>
+
+    <h2>Text</h2>
+    <div class="field">
+      <label for="textValue">Textbox content</label>
+      <input id="textValue" type="text" value="Type here" />
+    </div>
+    <div class="field">
+      <label for="fontSize">Textbox font size (default 12)</label>
+      <input id="fontSize" type="number" min="8" max="48" value="12" />
+    </div>
+    <div class="action-row">
+      <button class="action-btn" id="addTextBtn">Add Text</button>
+      <button class="action-btn" id="updateTextBtn">Update Selected</button>
+    </div>
+
+    <h2>Components</h2>
+    <div class="tool-grid">
       <button class="tool-btn" data-tool="bulb">Bulb</button>
       <button class="tool-btn" data-tool="battery">Battery</button>
       <button class="tool-btn" data-tool="switch-open">Switch Open</button>
       <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
-      <button class="tool-btn" data-tool="delete">Delete</button>
     </div>
 
     <h2>Placement</h2>
     <div class="action-row">
       <button class="action-btn" id="rotateBtn">Rotate 90°</button>
-      <button class="action-btn" id="flipBtn">Flip 180°</button>
+      <button class="action-btn" id="flipBtn">Rotate 180°</button>
     </div>
     <div class="action-row single">
       <button class="action-btn" id="toggleGridBtn">Hide Grid</button>
@@ -168,19 +196,28 @@
     <div class="status" id="statusBox"></div>
   </aside>
 
+
   <main class="workspace">
+    
     <div class="topbar">
+      <button id="zoomOutBtn">−</button>
+      <button id="zoomResetBtn">100%</button>
+      <button id="zoomInBtn">+</button>
       <button id="fitBtn">Centre View</button>
     </div>
+
     <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
   </main>
 
+  
   <script>
-    // Bulb is drawn directly in SVG for cleaner snapping and export.
     const svg = document.getElementById('app');
     const GRID = 28;
+    const SCALED_GRID = GRID;
     const HIT = 10;
     const WIRE_STROKE = 3;
+    const COMPONENT_SCALE = 0.8;
+    const BULB_SCALE = 1;
 
     const state = {
       tool: 'select',
@@ -188,14 +225,20 @@
       showGrid: true,
       wires: [],
       components: [],
+      arrows: [],
+      labelLines: [],
+      texts: [],
       junctionMap: new Map(),
       selected: null,
       dragging: null,
       wirePreview: null,
+      shapePreview: null,
       history: [],
       future: [],
       nextId: 1,
-      viewport: { width: 1200, height: 800 }
+      viewport: { width: 1200, height: 800 },
+      zoom: 1,
+      viewCenter: { x: 600, y: 400 },
     };
 
     const ui = {
@@ -208,7 +251,14 @@
       redoBtn: document.getElementById('redoBtn'),
       clearBtn: document.getElementById('clearBtn'),
       exportBtn: document.getElementById('exportBtn'),
-      fitBtn: document.getElementById('fitBtn')
+      fitBtn: document.getElementById('fitBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      zoomResetBtn: document.getElementById('zoomResetBtn'),
+      textValue: document.getElementById('textValue'),
+      fontSize: document.getElementById('fontSize'),
+      addTextBtn: document.getElementById('addTextBtn'),
+      updateTextBtn: document.getElementById('updateTextBtn')
     };
 
     function deepClone(obj) {
@@ -219,36 +269,54 @@
       state.history.push(deepClone({
         wires: state.wires,
         components: state.components,
-        nextId: state.nextId
+        arrows: state.arrows,
+        labelLines: state.labelLines,
+        texts: state.texts,
+        nextId: state.nextId,
+        zoom: state.zoom,
+        viewCenter: state.viewCenter
       }));
       if (state.history.length > 100) state.history.shift();
       state.future = [];
     }
 
     function restoreSnapshot(snapshot) {
-      state.wires = deepClone(snapshot.wires);
-      state.components = deepClone(snapshot.components);
+      state.wires = deepClone(snapshot.wires || []);
+      state.components = deepClone(snapshot.components || []);
+      state.arrows = deepClone(snapshot.arrows || []);
+      state.labelLines = deepClone(snapshot.labelLines || []);
+      state.texts = deepClone(snapshot.texts || []);
       state.nextId = snapshot.nextId;
+      state.zoom = snapshot.zoom || 1;
+      state.viewCenter = snapshot.viewCenter || { x: 600, y: 400 };
       state.selected = null;
       rebuildJunctions();
+      syncTextControls();
       render();
     }
 
     function undo() {
       if (!state.history.length) return;
-      state.future.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      state.future.push(deepClone({
+        wires: state.wires, components: state.components, arrows: state.arrows,
+        labelLines: state.labelLines, texts: state.texts, nextId: state.nextId,
+        zoom: state.zoom, viewCenter: state.viewCenter
+      }));
       restoreSnapshot(state.history.pop());
     }
 
     function redo() {
       if (!state.future.length) return;
-      state.history.push(deepClone({ wires: state.wires, components: state.components, nextId: state.nextId }));
+      state.history.push(deepClone({
+        wires: state.wires, components: state.components, arrows: state.arrows,
+        labelLines: state.labelLines, texts: state.texts, nextId: state.nextId,
+        zoom: state.zoom, viewCenter: state.viewCenter
+      }));
       restoreSnapshot(state.future.pop());
     }
 
-    function snap(v) { return Math.round(v / GRID) * GRID; }
+    function snap(v) { return Math.round(v / SCALED_GRID) * SCALED_GRID; }
     function keyPt(x, y) { return `${x},${y}`; }
-
     function addJunction(x, y) {
       const key = keyPt(x, y);
       state.junctionMap.set(key, (state.junctionMap.get(key) || 0) + 1);
@@ -257,7 +325,7 @@
     function segmentPoints(a, b) {
       const dx = b.x - a.x;
       const dy = b.y - a.y;
-      const steps = gcd(Math.abs(dx), Math.abs(dy)) / GRID;
+      const steps = gcd(Math.abs(dx), Math.abs(dy)) / SCALED_GRID;
       if (steps <= 0) return [a];
       const stepx = dx / steps;
       const stepy = dy / steps;
@@ -287,10 +355,12 @@
       state.tool = tool;
       state.selected = null;
       ui.toolBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === tool));
+      if (tool === 'textbox') setStatus('Click on the canvas to place the textbox.');
       render();
     }
 
     ui.toolBtns.forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
+
     ui.rotateBtn.addEventListener('click', () => {
       state.rotation = (state.rotation + 90) % 360;
       if (state.selected?.kind === 'component') {
@@ -327,41 +397,70 @@
       render();
     });
 
+    ui.zoomInBtn.addEventListener('click', () => { state.zoom = Math.min(3, +(state.zoom * 1.25).toFixed(2)); render(); });
+    ui.zoomOutBtn.addEventListener('click', () => { state.zoom = Math.max(0.4, +(state.zoom / 1.25).toFixed(2)); render(); });
+    ui.zoomResetBtn.addEventListener('click', () => { state.zoom = 1; render(); });
+    ui.fitBtn.addEventListener('click', centreView);
     ui.undoBtn.addEventListener('click', undo);
     ui.redoBtn.addEventListener('click', redo);
     ui.clearBtn.addEventListener('click', () => {
       saveHistory();
       state.wires = [];
       state.components = [];
+      state.arrows = [];
+      state.labelLines = [];
+      state.texts = [];
       state.selected = null;
       rebuildJunctions();
+      syncTextControls();
       render();
     });
     ui.exportBtn.addEventListener('click', exportPNG);
-    ui.fitBtn.addEventListener('click', render);
+
+    ui.addTextBtn.addEventListener('click', () => {
+      setTool('textbox');
+      setStatus('Click on the canvas to place the textbox.');
+    });
+
+    ui.updateTextBtn.addEventListener('click', () => {
+      if (state.selected?.kind !== 'text') {
+        setStatus('Select a textbox first, then use <strong>Update Selected</strong>.');
+        return;
+      }
+      const t = state.texts.find(t => t.id === state.selected.id);
+      if (!t) return;
+      saveHistory();
+      t.text = (ui.textValue.value || 'Type here').trim() || 'Type here';
+      t.fontSize = Math.max(8, Math.min(48, Number(ui.fontSize.value) || 12));
+      sizeTextbox(t);
+      render();
+    });
+
+    ui.fontSize.addEventListener('input', () => {
+      if (state.selected?.kind !== 'text') return;
+      const t = state.texts.find(t => t.id === state.selected.id);
+      if (!t) return;
+      t.fontSize = Math.max(8, Math.min(48, Number(ui.fontSize.value) || 12));
+      sizeTextbox(t);
+      render();
+    });
 
     document.addEventListener('keydown', (e) => {
       const ctrl = e.ctrlKey || e.metaKey;
+      const tag = (e.target?.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea') return;
       if (ctrl && e.key.toLowerCase() === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
       if (ctrl && ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y')) { e.preventDefault(); redo(); }
       if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (state.selected) {
-          e.preventDefault();
-          deleteSelected();
-        }
+        if (state.selected) { e.preventDefault(); deleteSelected(); }
       }
-      if (e.key.toLowerCase() === 'r') {
-        e.preventDefault();
-        ui.rotateBtn.click();
-      }
-      if (e.key.toLowerCase() === 'f') {
-        e.preventDefault();
-        ui.flipBtn.click();
-      }
+      if (e.key.toLowerCase() === 'r') { e.preventDefault(); ui.rotateBtn.click(); }
+      if (e.key.toLowerCase() === 'f') { e.preventDefault(); ui.flipBtn.click(); }
     });
 
     function setStatus(html) {
       ui.statusBox.innerHTML = html;
+      ui.zoomResetBtn.textContent = `${Math.round(state.zoom * 100)}%`;
     }
 
     function pointerToSvg(evt) {
@@ -372,14 +471,12 @@
       return { x: transformed.x, y: transformed.y };
     }
 
-    function nearestGridPoint(p) {
-      return { x: snap(p.x), y: snap(p.y) };
-    }
+    function nearestGridPoint(p) { return { x: snap(p.x), y: snap(p.y) }; }
 
     function componentSize(type) {
-      if (type === 'bulb') return { w: 92, h: 92 };
-      if (type === 'battery') return { w: 52, h: 92 };
-      return { w: 80, h: 30 };
+      if (type === 'bulb') return { w: 92 * BULB_SCALE, h: 92 * BULB_SCALE };
+      if (type === 'battery') return { w: 52 * COMPONENT_SCALE, h: 92 * COMPONENT_SCALE };
+      return { w: 80 * COMPONENT_SCALE, h: 30 * COMPONENT_SCALE };
     }
 
     function rotatePoint(x, y, rotation) {
@@ -389,10 +486,7 @@
       if (r === 180) return { x: -x, y: -y };
       if (r === 270) return { x: y, y: -x };
       const rad = r * Math.PI / 180;
-      return {
-        x: x * Math.cos(rad) - y * Math.sin(rad),
-        y: x * Math.sin(rad) + y * Math.cos(rad)
-      };
+      return { x: x * Math.cos(rad) - y * Math.sin(rad), y: x * Math.sin(rad) + y * Math.cos(rad) };
     }
 
     function preserveFlipAlignedRotation(currentRotation, axisRotation) {
@@ -403,25 +497,9 @@
     }
 
     function getLocalNodes(comp) {
-      if (comp.type === 'bulb') {
-        return [
-          { x: -18, y: 18 },
-          { x: 18, y: 18 },
-          { x: 0, y: 46 }
-        ];
-      }
-      if (comp.type === 'battery') {
-        return [
-          { x: 0, y: -46 },
-          { x: 0, y: 46 }
-        ];
-      }
-      if (comp.type === 'switch') {
-        return [
-          { x: -40, y: 0 },
-          { x: 40, y: 0 }
-        ];
-      }
+      if (comp.type === 'bulb') return [ { x: -18*BULB_SCALE, y: 18*BULB_SCALE }, { x: 18*BULB_SCALE, y: 18*BULB_SCALE }, { x: 0, y: 46*BULB_SCALE } ];
+      if (comp.type === 'battery') return [ { x: 0, y: -46*COMPONENT_SCALE }, { x: 0, y: 46*COMPONENT_SCALE } ];
+      if (comp.type === 'switch') return [ { x: -40*COMPONENT_SCALE, y: 0 }, { x: 40*COMPONENT_SCALE, y: 0 } ];
       return [];
     }
 
@@ -432,9 +510,7 @@
       });
     }
 
-    function distance(a, b) {
-      return Math.hypot(a.x - b.x, a.y - b.y);
-    }
+    function distance(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
     function pointLineDistance(p, a, b) {
       const l2 = (b.x-a.x)**2 + (b.y-a.y)**2;
@@ -446,25 +522,106 @@
 
     function getComponentBounds(comp) {
       const size = componentSize(comp.type);
-      const rotated = comp.rotation % 180 === 0
-        ? { w: size.w + 20, h: size.h + 20 }
-        : { w: size.h + 20, h: size.w + 20 };
+      const rotated = comp.rotation % 180 === 0 ? { w: size.w + 16, h: size.h + 16 } : { w: size.h + 16, h: size.w + 16 };
       return { x: comp.x - rotated.w / 2, y: comp.y - rotated.h / 2, w: rotated.w, h: rotated.h };
     }
 
+    let textMeasureCanvas = null;
+    let textMeasureCtx = null;
+
+    function getTextMeasureContext() {
+      if (!textMeasureCtx) {
+        textMeasureCanvas = document.createElement('canvas');
+        textMeasureCtx = textMeasureCanvas.getContext('2d');
+      }
+      return textMeasureCtx;
+    }
+
+    function measureTextWidth(textValue, fontSize) {
+      const ctx = getTextMeasureContext();
+      const safeText = String(textValue || '');
+      const size = fontSize || 12;
+      if (!ctx) {
+        // Fallback heuristic if 2D context is unavailable
+        return safeText.length * size * 0.6;
+      }
+      ctx.font = `${size}px Arial, Helvetica, sans-serif`;
+      return ctx.measureText(safeText).width;
+    }
+
+    function wrapTextLines(textValue, maxWidth, fontSize) {
+      const textStr = String(textValue || '');
+      const paragraphs = textStr.split('\n');
+      const lines = [];
+      for (const para of paragraphs) {
+        const words = para.split(/\s+/).filter(Boolean);
+        if (!words.length) {
+          lines.push('');
+          continue;
+        }
+        let current = words[0];
+        for (let i = 1; i < words.length; i++) {
+          const trial = `${current} ${words[i]}`;
+          if (measureTextWidth(trial, fontSize) <= maxWidth) current = trial;
+          else { lines.push(current); current = words[i]; }
+        }
+        lines.push(current);
+      }
+      return lines.length ? lines : [''];
+    }
+
+    function sizeTextbox(t) {
+      const fontSize = Math.max(8, Number(t.fontSize) || 12);
+      const minWidth = 48;
+      const maxWidth = 220;
+      const rawWidth = Math.ceil(measureTextWidth(t.text || 'Type here', fontSize) + 16);
+      const width = Math.max(minWidth, Math.min(maxWidth, rawWidth));
+      const lines = wrapTextLines(t.text || 'Type here', Math.max(40, width - 12), fontSize);
+      const lineHeight = fontSize * 1.25;
+      t.width = width;
+      t.height = Math.max(lineHeight, lines.length * lineHeight);
+      return { width: t.width, height: t.height, lines, lineHeight };
+    }
+
+    function getTextBounds(t) {
+      const box = sizeTextbox(t);
+      return { x: t.x - box.width / 2 - 4, y: t.y - box.height / 2 - 4, w: box.width + 8, h: box.height + 8 };
+    }
+
+    function loadSelectedTextIntoPanel(t) {
+      ui.textValue.value = t.text || 'Type here';
+      ui.fontSize.value = t.fontSize || 12;
+    }
+
+    function syncTextControls() {
+      if (state.selected?.kind !== 'text') return;
+      const t = state.texts.find(item => item.id === state.selected.id);
+      if (!t) return;
+      loadSelectedTextIntoPanel(t);
+    }
+
     function findHit(p) {
+      for (let i = state.texts.length - 1; i >= 0; i--) {
+        const t = state.texts[i];
+        const box = getTextBounds(t);
+        if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) return { kind: 'text', id: t.id };
+      }
       for (let i = state.components.length - 1; i >= 0; i--) {
         const comp = state.components[i];
         const box = getComponentBounds(comp);
-        if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) {
-          return { kind: 'component', id: comp.id };
-        }
+        if (p.x >= box.x && p.x <= box.x + box.w && p.y >= box.y && p.y <= box.y + box.h) return { kind: 'component', id: comp.id };
+      }
+      for (let i = state.arrows.length - 1; i >= 0; i--) {
+        const a = state.arrows[i];
+        if (pointLineDistance(p, a.a, a.b) <= HIT) return { kind: 'arrow', id: a.id };
+      }
+      for (let i = state.labelLines.length - 1; i >= 0; i--) {
+        const l = state.labelLines[i];
+        if (pointLineDistance(p, l.a, l.b) <= HIT) return { kind: 'labelLine', id: l.id };
       }
       for (let i = state.wires.length - 1; i >= 0; i--) {
         const wire = state.wires[i];
-        if (pointLineDistance(p, wire.a, wire.b) <= HIT) {
-          return { kind: 'wire', id: wire.id };
-        }
+        if (pointLineDistance(p, wire.a, wire.b) <= HIT) return { kind: 'wire', id: wire.id };
       }
       return null;
     }
@@ -472,18 +629,27 @@
     function addComponent(type, pos) {
       saveHistory();
       const p = nearestGridPoint(pos);
-      const comp = {
-        id: state.nextId++,
-        type,
-        x: p.x,
-        y: p.y,
-        rotation: state.rotation,
-        variant: type
-      };
+      const comp = { id: state.nextId++, type, x: p.x, y: p.y, rotation: state.rotation, variant: type };
       autoAlignComponent(comp);
       state.components.push(comp);
       rebuildJunctions();
       state.selected = { kind: 'component', id: comp.id };
+      render();
+    }
+
+    function addTextAt(pos) {
+      saveHistory();
+      const t = {
+        id: state.nextId++,
+        x: pos.x,
+        y: pos.y,
+        text: (ui.textValue.value || 'Type here').trim() || 'Type here',
+        fontSize: Math.max(8, Math.min(48, Number(ui.fontSize.value) || 12))
+      };
+      sizeTextbox(t);
+      state.texts.push(t);
+      state.selected = { kind: 'text', id: t.id };
+      loadSelectedTextIntoPanel(t);
       render();
     }
 
@@ -511,9 +677,7 @@
     function nearbyWireDirections(p) {
       const res = [];
       for (const wire of state.wires) {
-        if (pointLineDistance(p, wire.a, wire.b) <= GRID * 0.75) {
-          res.push(Math.atan2(wire.b.y - wire.a.y, wire.b.x - wire.a.x));
-        }
+        if (pointLineDistance(p, wire.a, wire.b) <= SCALED_GRID * 0.75) res.push(Math.atan2(wire.b.y - wire.a.y, wire.b.x - wire.a.x));
       }
       return res;
     }
@@ -521,13 +685,14 @@
     function deleteSelected() {
       if (!state.selected) return;
       saveHistory();
-      if (state.selected.kind === 'component') {
-        state.components = state.components.filter(c => c.id !== state.selected.id);
-      } else {
-        state.wires = state.wires.filter(w => w.id !== state.selected.id);
-      }
+      if (state.selected.kind === 'component') state.components = state.components.filter(c => c.id !== state.selected.id);
+      else if (state.selected.kind === 'wire') state.wires = state.wires.filter(w => w.id !== state.selected.id);
+      else if (state.selected.kind === 'arrow') state.arrows = state.arrows.filter(a => a.id !== state.selected.id);
+      else if (state.selected.kind === 'labelLine') state.labelLines = state.labelLines.filter(l => l.id !== state.selected.id);
+      else if (state.selected.kind === 'text') state.texts = state.texts.filter(t => t.id !== state.selected.id);
       state.selected = null;
       rebuildJunctions();
+      syncTextControls();
       render();
     }
 
@@ -542,12 +707,23 @@
         return;
       }
 
+      if (state.tool === 'arrow' || state.tool === 'grid-arrow' || state.tool === 'label-line') {
+        const free = state.tool !== 'grid-arrow';
+        const start = free ? p : snapped;
+        state.dragging = { mode: state.tool, start, current: start };
+        state.shapePreview = { a: start, b: start, kind: state.tool };
+        render();
+        return;
+      }
+
       if (state.tool === 'delete') {
         const hit = findHit(p);
-        if (hit) {
-          state.selected = hit;
-          deleteSelected();
-        }
+        if (hit) { state.selected = hit; deleteSelected(); }
+        return;
+      }
+
+      if (state.tool === 'textbox') {
+        addTextAt(p);
         return;
       }
 
@@ -562,15 +738,20 @@
 
       const hit = findHit(p);
       state.selected = hit;
+      syncTextControls();
       if (hit?.kind === 'component' && state.tool === 'select') {
         const comp = state.components.find(c => c.id === hit.id);
-        state.dragging = {
-          mode: 'move-component',
-          id: comp.id,
-          startX: comp.x,
-          startY: comp.y,
-          moved: false
-        };
+        state.dragging = { mode: 'move-component', id: comp.id, moved: false };
+      } else if (hit?.kind === 'arrow' && state.tool === 'select') {
+        const a = state.arrows.find(a => a.id === hit.id);
+        state.dragging = { mode: 'move-arrow', id: a.id, anchor: p, moved: false };
+      } else if (hit?.kind === 'labelLine' && state.tool === 'select') {
+        const l = state.labelLines.find(l => l.id === hit.id);
+        state.dragging = { mode: 'move-labelLine', id: l.id, anchor: p, moved: false };
+      } else if (hit?.kind === 'text' && state.tool === 'select') {
+        const t = state.texts.find(t => t.id === hit.id);
+        loadSelectedTextIntoPanel(t);
+        state.dragging = { mode: 'move-text', id: t.id, anchor: p, moved: false };
       }
       render();
     });
@@ -583,18 +764,43 @@
         state.dragging.current = snapped;
         state.wirePreview = { a: state.dragging.start, b: snapped };
         render();
-      }
-      if (state.dragging.mode === 'move-component') {
+      } else if (state.dragging.mode === 'arrow' || state.dragging.mode === 'grid-arrow' || state.dragging.mode === 'label-line') {
+        const pt = state.dragging.mode === 'grid-arrow' ? snapped : p;
+        state.dragging.current = pt;
+        state.shapePreview = { a: state.dragging.start, b: pt, kind: state.dragging.mode };
+        render();
+      } else if (state.dragging.mode === 'move-component') {
         const comp = state.components.find(c => c.id === state.dragging.id);
         if (!comp) return;
-        if (!state.dragging.moved) {
-          saveHistory();
-          state.dragging.moved = true;
-        }
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
         comp.x = snapped.x;
         comp.y = snapped.y;
         autoAlignComponent(comp);
         rebuildJunctions();
+        render();
+      } else if (state.dragging.mode === 'move-arrow') {
+        const a = state.arrows.find(x => x.id === state.dragging.id);
+        if (!a) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
+        const dx = p.x - state.dragging.anchor.x, dy = p.y - state.dragging.anchor.y;
+        a.a.x += dx; a.a.y += dy; a.b.x += dx; a.b.y += dy;
+        state.dragging.anchor = p;
+        render();
+      } else if (state.dragging.mode === 'move-labelLine') {
+        const l = state.labelLines.find(x => x.id === state.dragging.id);
+        if (!l) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
+        const dx = p.x - state.dragging.anchor.x, dy = p.y - state.dragging.anchor.y;
+        l.a.x += dx; l.a.y += dy; l.b.x += dx; l.b.y += dy;
+        state.dragging.anchor = p;
+        render();
+      } else if (state.dragging.mode === 'move-text') {
+        const t = state.texts.find(x => x.id === state.dragging.id);
+        if (!t) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
+        t.x += p.x - state.dragging.anchor.x;
+        t.y += p.y - state.dragging.anchor.y;
+        state.dragging.anchor = p;
         render();
       }
     });
@@ -610,37 +816,76 @@
           state.selected = { kind: 'wire', id: state.nextId - 1 };
         }
         state.wirePreview = null;
+      } else if (state.dragging.mode === 'arrow' || state.dragging.mode === 'grid-arrow') {
+        const { start, current } = state.dragging;
+        if (distance(start, current) > 0) {
+          saveHistory();
+          state.arrows.push({ id: state.nextId++, a: start, b: current, grid: state.dragging.mode === 'grid-arrow' });
+          state.selected = { kind: 'arrow', id: state.nextId - 1 };
+        }
+        state.shapePreview = null;
+      } else if (state.dragging.mode === 'label-line') {
+        const { start, current } = state.dragging;
+        if (distance(start, current) > 0) {
+          saveHistory();
+          state.labelLines.push({ id: state.nextId++, a: start, b: current });
+          state.selected = { kind: 'labelLine', id: state.nextId - 1 };
+        }
+        state.shapePreview = null;
       }
       state.dragging = null;
       render();
     });
 
     svg.addEventListener('pointerleave', () => {
-      if (state.dragging?.mode === 'wire') {
+      if (state.dragging?.mode === 'wire' || state.dragging?.mode === 'arrow' || state.dragging?.mode === 'grid-arrow' || state.dragging?.mode === 'label-line') {
         state.dragging = null;
         state.wirePreview = null;
+        state.shapePreview = null;
         render();
       }
     });
 
+    function centreView() {
+      const bounds = contentBounds();
+      state.viewCenter = { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h / 2 };
+      render();
+    }
+
+    function currentViewBox() {
+      const vw = state.viewport.width / state.zoom;
+      const vh = state.viewport.height / state.zoom;
+      let x = state.viewCenter.x - vw / 2;
+      let y = state.viewCenter.y - vh / 2;
+      return { x, y, w: vw, h: vh };
+    }
+
     function render() {
       state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth;
       state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight;
-      svg.setAttribute('viewBox', `0 0 ${state.viewport.width} ${state.viewport.height}`);
+      const vb = currentViewBox();
+      svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
       svg.innerHTML = '';
-      if (state.showGrid) drawGrid();
+      if (state.showGrid) drawGrid(vb);
       drawWires();
       drawWirePreview();
+      drawArrows();
+      drawLabelLines();
+      drawShapePreview();
       drawComponents();
+      drawTexts();
+      setStatus(ui.statusBox.innerHTML || defaultStatus());
     }
 
-    function drawGrid() {
+    function drawGrid(vb) {
       const g = make('g');
-      for (let x = 0; x <= state.viewport.width; x += GRID) {
-        g.appendChild(make('line', { x1: x, y1: 0, x2: x, y2: state.viewport.height, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      const startX = Math.floor(vb.x / SCALED_GRID) * SCALED_GRID;
+      const startY = Math.floor(vb.y / SCALED_GRID) * SCALED_GRID;
+      for (let x = startX; x <= vb.x + vb.w + SCALED_GRID; x += SCALED_GRID) {
+        g.appendChild(make('line', { x1: x, y1: vb.y, x2: x, y2: vb.y + vb.h, stroke: '#f0f0f0', 'stroke-width': 1 }));
       }
-      for (let y = 0; y <= state.viewport.height; y += GRID) {
-        g.appendChild(make('line', { x1: 0, y1: y, x2: state.viewport.width, y2: y, stroke: '#f0f0f0', 'stroke-width': 1 }));
+      for (let y = startY; y <= vb.y + vb.h + SCALED_GRID; y += SCALED_GRID) {
+        g.appendChild(make('line', { x1: vb.x, y1: y, x2: vb.x + vb.w, y2: y, stroke: '#f0f0f0', 'stroke-width': 1 }));
       }
       svg.appendChild(g);
     }
@@ -668,6 +913,72 @@
       }));
     }
 
+    function drawArrows() {
+      for (const arrow of state.arrows) {
+        drawArrowShape(arrow.a, arrow.b, state.selected?.kind === 'arrow' && state.selected.id === arrow.id);
+      }
+    }
+
+    function arrowGeometry(a, b) {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const ux = dx / len, uy = dy / len;
+      const headLen = 12, headHalf = 5;
+      const base = { x: b.x - ux * headLen, y: b.y - uy * headLen };
+      const left = { x: base.x - uy * headHalf, y: base.y + ux * headHalf };
+      const right = { x: base.x + uy * headHalf, y: base.y - ux * headHalf };
+      return { base, left, right };
+    }
+
+    function drawArrowShape(a, b, selected) {
+      const g = make('g');
+      const geom = arrowGeometry(a, b);
+      g.appendChild(make('line', {
+        x1: a.x, y1: a.y, x2: geom.base.x, y2: geom.base.y,
+        stroke: selected ? '#2563eb' : '#111827',
+        'stroke-width': selected ? 3 : 2.2,
+        'stroke-linecap': 'round'
+      }));
+      g.appendChild(make('polygon', {
+        points: `${b.x},${b.y} ${geom.left.x},${geom.left.y} ${geom.right.x},${geom.right.y}`,
+        fill: selected ? '#2563eb' : '#111827'
+      }));
+      svg.appendChild(g);
+    }
+
+    function drawLabelLines() {
+      for (const l of state.labelLines) {
+        svg.appendChild(make('line', {
+          x1: l.a.x, y1: l.a.y, x2: l.b.x, y2: l.b.y,
+          stroke: state.selected?.kind === 'labelLine' && state.selected.id === l.id ? '#2563eb' : '#111827',
+          'stroke-width': state.selected?.kind === 'labelLine' && state.selected.id === l.id ? 2.8 : 2,
+          'stroke-linecap': 'round'
+        }));
+      }
+    }
+
+    function drawShapePreview() {
+      if (!state.shapePreview) return;
+      if (state.shapePreview.kind === 'label-line') {
+        svg.appendChild(make('line', {
+          x1: state.shapePreview.a.x, y1: state.shapePreview.a.y,
+          x2: state.shapePreview.b.x, y2: state.shapePreview.b.y,
+          stroke: '#60a5fa', 'stroke-width': 2, 'stroke-dasharray': '6 5', 'stroke-linecap': 'round'
+        }));
+      } else {
+        const geom = arrowGeometry(state.shapePreview.a, state.shapePreview.b);
+        svg.appendChild(make('line', {
+          x1: state.shapePreview.a.x, y1: state.shapePreview.a.y,
+          x2: geom.base.x, y2: geom.base.y,
+          stroke: '#60a5fa', 'stroke-width': 2.2, 'stroke-dasharray': '6 5', 'stroke-linecap': 'round'
+        }));
+        svg.appendChild(make('polygon', {
+          points: `${state.shapePreview.b.x},${state.shapePreview.b.y} ${geom.left.x},${geom.left.y} ${geom.right.x},${geom.right.y}`,
+          fill: '#60a5fa'
+        }));
+      }
+    }
+
     function drawComponents() {
       for (const comp of state.components) {
         const selected = state.selected?.kind === 'component' && state.selected.id === comp.id;
@@ -675,14 +986,44 @@
           const box = getComponentBounds(comp);
           svg.appendChild(make('rect', {
             x: box.x, y: box.y, width: box.w, height: box.h,
-            rx: 10, ry: 10, fill: 'none', stroke: '#3b82f6', 'stroke-width': 2, 'stroke-dasharray': '5 4'
+            rx: 8, ry: 8, fill: 'none', stroke: '#3b82f6', 'stroke-width': 2, 'stroke-dasharray': '5 4'
           }));
         }
-        const wrap = make('g', { transform: `translate(${comp.x} ${comp.y}) rotate(${comp.rotation})` });
+        const scale = comp.type === 'bulb' ? BULB_SCALE : COMPONENT_SCALE;
+        const wrap = make('g', { transform: `translate(${comp.x} ${comp.y}) rotate(${comp.rotation}) scale(${scale})` });
         if (comp.type === 'bulb') drawBulbObject(wrap);
         if (comp.type === 'battery') drawBatteryObject(wrap);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
         svg.appendChild(wrap);
+      }
+    }
+
+    function drawTexts() {
+      for (const t of state.texts) {
+        const box = sizeTextbox(t);
+        const startY = t.y - ((box.lines.length - 1) * box.lineHeight) / 2;
+        const g = make('g');
+        box.lines.forEach((line, index) => {
+          const textNode = make('text', {
+            x: t.x,
+            y: startY + index * box.lineHeight,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'middle',
+            'font-size': t.fontSize || 12,
+            'font-family': 'Arial, Helvetica, sans-serif',
+            fill: '#111827'
+          });
+          textNode.textContent = line;
+          g.appendChild(textNode);
+        });
+        svg.appendChild(g);
+        if (state.selected?.kind === 'text' && state.selected.id === t.id) {
+          const bounds = getTextBounds(t);
+          svg.appendChild(make('rect', {
+            x: bounds.x, y: bounds.y, width: bounds.w, height: bounds.h,
+            rx: 6, ry: 6, fill: 'none', stroke: '#3b82f6', 'stroke-width': 1.5, 'stroke-dasharray': '4 3'
+          }));
+        }
       }
     }
 
@@ -696,38 +1037,22 @@
       g.appendChild(make('path', { d: 'M -8 6 Q -3 1 0 6 Q 3 11 8 6', fill: 'none', stroke: '#111827', 'stroke-width': 2.2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
       g.appendChild(make('rect', { x: -9, y: 27, width: 18, height: 6, rx: 2, ry: 2, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
       g.appendChild(make('rect', { x: -18, y: 15, width: 36, height: 24, rx: 4, ry: 4, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
-      for (const y of [21, 27, 33]) {
-        g.appendChild(make('line', { x1: -15, y1: y, x2: 15, y2: y, stroke: '#111827', 'stroke-width': 2 }));
-      }
+      for (const y of [21, 27, 33]) g.appendChild(make('line', { x1: -15, y1: y, x2: 15, y2: y, stroke: '#111827', 'stroke-width': 2 }));
       g.appendChild(make('rect', { x: -7, y: 39, width: 14, height: 7, rx: 2, ry: 2, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
     }
 
     function drawBatteryObject(g) {
-      g.appendChild(make('rect', {
-        x: -13, y: -34, width: 26, height: 68, rx: 4, ry: 4,
-        fill: 'white', stroke: '#111827', 'stroke-width': 3
-      }));
-      g.appendChild(make('rect', {
-        x: -6, y: -46, width: 12, height: 12, rx: 2, ry: 2,
-        fill: 'white', stroke: '#111827', 'stroke-width': 3
-      }));
+      g.appendChild(make('rect', { x: -13, y: -34, width: 26, height: 68, rx: 4, ry: 4, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
+      g.appendChild(make('rect', { x: -6, y: -46, width: 12, height: 12, rx: 2, ry: 2, fill: 'white', stroke: '#111827', 'stroke-width': 3 }));
     }
 
     function drawSwitch(g, closed) {
       g.appendChild(make('line', { x1: -40, y1: 0, x2: -14, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
       g.appendChild(make('line', { x1: 14, y1: 0, x2: 40, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
-      if (!closed) {
-        g.appendChild(make('line', {
-          x1: -10, y1: 0, x2: 10, y2: 0,
-          stroke: 'white', 'stroke-width': 6, 'stroke-linecap': 'round'
-        }));
-      }
+      if (!closed) g.appendChild(make('line', { x1: -10, y1: 0, x2: 10, y2: 0, stroke: 'white', 'stroke-width': 6, 'stroke-linecap': 'round' }));
       g.appendChild(make('circle', { cx: -14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': 2.5 }));
       g.appendChild(make('circle', { cx: 14, cy: 0, r: 4, fill: 'white', stroke: '#111827', 'stroke-width': 2.5 }));
-      g.appendChild(make('line', {
-        x1: -12, y1: 0, x2: 12, y2: closed ? 0 : -12,
-        stroke: '#111827', 'stroke-width': 3, 'stroke-linecap': 'round'
-      }));
+      g.appendChild(make('line', { x1: -12, y1: 0, x2: 12, y2: closed ? 0 : -12, stroke: '#111827', 'stroke-width': 3, 'stroke-linecap': 'round' }));
     }
 
     function make(tag, attrs = {}) {
@@ -739,20 +1064,11 @@
     function exportPNG() {
       const clone = svg.cloneNode(true);
       clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-      [...clone.querySelectorAll('line')].forEach(l => {
-        if (state.showGrid && l.getAttribute('stroke') === '#f0f0f0') l.remove();
-      });
-      [...clone.querySelectorAll('rect')].forEach(r => {
-        if (r.getAttribute('stroke-dasharray')) r.remove();
-      });
+      [...clone.querySelectorAll('line')].forEach(l => { if (state.showGrid && l.getAttribute('stroke') === '#f0f0f0') l.remove(); });
+      [...clone.querySelectorAll('rect')].forEach(r => { if (r.getAttribute('stroke-dasharray')) r.remove(); });
       const bounds = contentBounds();
       const padding = 30;
-      const vb = [
-        Math.max(0, bounds.x - padding),
-        Math.max(0, bounds.y - padding),
-        Math.max(120, bounds.w + padding * 2),
-        Math.max(120, bounds.h + padding * 2)
-      ];
+      const vb = [ Math.max(0, bounds.x - padding), Math.max(0, bounds.y - padding), Math.max(120, bounds.w + padding * 2), Math.max(120, bounds.h + padding * 2) ];
       clone.setAttribute('viewBox', vb.join(' '));
       clone.setAttribute('width', vb[2]);
       clone.setAttribute('height', vb[3]);
@@ -783,6 +1099,12 @@
     function contentBounds() {
       const points = [];
       state.wires.forEach(w => points.push(w.a, w.b));
+      state.arrows.forEach(a => points.push(a.a, a.b));
+      state.labelLines.forEach(l => points.push(l.a, l.b));
+      state.texts.forEach(t => {
+        const b = getTextBounds(t);
+        points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
+      });
       state.components.forEach(c => {
         const b = getComponentBounds(c);
         points.push({ x: b.x, y: b.y }, { x: b.x + b.w, y: b.y + b.h });
@@ -793,11 +1115,16 @@
       return { x: minX, y: minY, w: maxX - minX, h: maxY - minY };
     }
 
-    setStatus(`Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br>
-      Use <strong>Rotate 90°</strong> or press <span class="kbd">R</span>. Use <strong>Flip 180°</strong> or press <span class="kbd">F</span> to reverse a battery without losing that polarity when it auto-aligns to a wire.<br><br>
-      This version uses <strong>object-style components</strong>. The bulb has connection points on the <strong>left side of the metal base, right side of the metal base, and bottom contact</strong>. The battery connects at its <strong>top terminal</strong> and <strong>bottom terminal</strong>.`);
+    function defaultStatus() {
+      return `Use <strong>Select / Move</strong> to select and drag items. Use <strong>Wire</strong> to draw straight, grid-snapped circuit wires between grid points. Use <strong>Arrow</strong> to draw a free-position arrow that does not snap to the grid. Use <strong>Label Line</strong> to draw a free-position straight label line with no arrowhead. Use <strong>Grid Arrow</strong> to draw an arrow that snaps to the grid. To add text, type into the <strong>Text</strong> panel, set the font size if needed, click <strong>Add Text</strong>, then click the canvas to place it. To change an existing textbox, select it, edit the text or font size in the <strong>Text</strong> panel, and click <strong>Update Selected</strong>. Use <strong>Rotate 90°</strong> or <strong>Rotate 180°</strong> to rotate the selected component; if nothing is selected, the chosen rotation is used for the next component placed. Use the <strong>+</strong>, <strong>−</strong>, and <strong>100%</strong> buttons above the canvas to zoom in, zoom out, or reset zoom; use <strong>Centre View</strong> to recenter the current drawing.
+      <br><br>
+      Tips: <span class="kbd">Delete</span> removes the selected item. <span class="kbd">R</span> rotates 90°. <span class="kbd">Ctrl/Cmd+Z</span> undo. <span class="kbd">Ctrl/Cmd+Shift+Z</span> redo. Wires snap to the grid; arrows and label lines do not.<br>Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>`;
+    }
+
+        setStatus(defaultStatus());
     render();
   </script>
+
   <script src="/tracker.js"></script>
 </body>
 </html>
