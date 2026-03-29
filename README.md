@@ -1,15 +1,17 @@
 # Diagram Tools
 
-Teaching tools for creating clean, exportable diagrams. Built for primary school educators — no installation required for end users.
+Teaching tools for creating clean, exportable diagrams. Built for Singapore educators — no installation required for end users.
 
 ## Tools
 
-| Tool | Route | Description |
-|------|-------|-------------|
-| Circuit Diagrams | `/tools/circuits` | Symbol and object-style circuit diagrams with battery, bulb, switch, and electromagnet components. Export as PNG. |
-| Isometric Cube Builder | `/tools/isometric-cube` | Build 3D cube structures and auto-generate top, front, and side orthogonal views. Export as PNG. |
+| Tool | Route | Level | Description |
+|------|-------|-------|-------------|
+| Circuit Diagrams (Pri) | `/tools/circuits` | Pri | Symbol and object-style circuit diagrams. Export as PNG. |
+| Circuit Diagrams (Sec/JC) | `/tools/circuits-secjc` | Sec/JC | Extended components: transistor, transformer, potentiometer, LED, and more. Export as PNG. |
+| Water Tank Diagram Generator | `/tools/water-tank` | Pri/Sec | Customisable water tank diagrams with adjustable dimensions and water levels. Export as PNG. |
+| Isometric Cube Builder | `/tools/isometric-cube` | Pri (PSLE) | Build 3D cube structures and auto-generate top, front, and side orthogonal views. Export as PNG. |
 
-The circuit tool has two modes (toggle without losing your work):
+The primary school circuit tool has two modes (toggle without losing your work):
 - **Symbol** — standard schematic symbols for worksheets
 - **Object** — realistic apparatus style for apparatus diagrams
 
@@ -73,25 +75,34 @@ Two things in each file must not be removed:
 <script src="/tracker.js"></script>
 ```
 
+Valid `tool-id` values: `circuit-symbol`, `circuit-object`, `circuit-secjc`, `water-tank`, `isometric-cube`.
+
 ## Project structure
 
 ```
 app/
-  page.tsx                  # Index — links to all tools
+  page.tsx                          # Index — links to all tools
+  layout.tsx                        # Root layout with GA4, favicons, OG image
   tools/
-    circuits/page.tsx       # Combined circuit view (symbol + object tabs)
-    isometric-cube/page.tsx # Isometric cube wrapper
-  metrics/page.tsx          # Metrics dashboard
-  api/event/route.ts        # POST endpoint — records PNG exports
-  layout.tsx                # Root layout with GA4
+    circuits/page.tsx               # Pri circuit view (symbol + object toggle)
+    circuits-secjc/page.tsx         # Sec/JC circuit view
+    water-tank/page.tsx             # Water tank wrapper
+    isometric-cube/page.tsx         # Isometric cube wrapper
+  metrics/page.tsx                  # Metrics dashboard
+  api/event/route.ts                # POST endpoint — records PNG exports
 lib/
-  db.ts                     # NeonDB connection (lazy)
-  schema.sql                # Run once to create DB tables
+  db.ts                             # NeonDB connection (lazy)
+  schema.sql                        # Run once to create DB tables
 public/
-  tools/                    # HTML tool files (edit freely)
-  tracker.js                # Shared tracking script
-_archive/
-  circuit-diagram-suite.html  # Retired — superseded by combined view
+  tools/                            # HTML tool files (edit freely)
+    circuit_pri_suitev2.html        # Pri circuit shell (symbol/object toggle)
+    circuit_diagram_creatorv2.html  # Pri symbol mode
+    object_circuitv2.html           # Pri object mode
+    circuit_diagram_secjc.html      # Sec/JC circuit tool
+    water_tank_generator.html       # Water tank tool
+    isometric-cube-generator.html   # Isometric cube tool
+  tracker.js                        # Shared tracking script
+  og-image.jpg                      # OpenGraph preview image
 ```
 
 ## Stack
@@ -101,3 +112,7 @@ _archive/
 - [NeonDB](https://neon.tech) — Postgres for metrics
 - [Tailwind CSS](https://tailwindcss.com) — styling
 - [Google Analytics 4](https://analytics.google.com) — traffic analytics
+
+---
+
+Created by Julienne, supported by [string.sg](https://string.sg)
