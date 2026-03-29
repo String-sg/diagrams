@@ -12,6 +12,7 @@ export default function CircuitsPage() {
         <iframe
           src="/tools/circuit_pri_suitev2.html"
           className="absolute inset-0 w-full h-full border-0"
+          title="Circuit Diagram Suite (Pri)"
         />
       </div>
     </div>
