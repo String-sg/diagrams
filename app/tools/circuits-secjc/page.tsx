@@ -12,6 +12,7 @@ export default function CircuitsSecJCPage() {
         <iframe
           src="/tools/circuit_diagram_secjc.html"
           className="absolute inset-0 w-full h-full border-0"
+          title="Circuit Diagram Generator (Sec/JC)"
         />
       </div>
     </div>
