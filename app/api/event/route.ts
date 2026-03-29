@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDb } from '@/lib/db'
 
-const VALID_TOOLS = new Set(['circuit-symbol', 'circuit-object', 'isometric-cube'])
+const VALID_TOOLS = new Set(['circuit-symbol', 'circuit-object', 'circuit-secjc', 'water-tank', 'isometric-cube'])
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null)

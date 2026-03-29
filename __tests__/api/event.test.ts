@@ -83,8 +83,8 @@ describe('POST /api/event', () => {
     expect(mockSql).toHaveBeenCalledTimes(3)
   })
 
-  it('accepts all three valid tool names', async () => {
-    const tools = ['circuit-symbol', 'circuit-object', 'isometric-cube']
+  it('accepts all valid tool names', async () => {
+    const tools = ['circuit-symbol', 'circuit-object', 'circuit-secjc', 'water-tank', 'isometric-cube']
     for (const tool of tools) {
       mockSql
         .mockResolvedValueOnce([])
