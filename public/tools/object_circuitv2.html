@@ -526,11 +526,27 @@
       return { x: comp.x - rotated.w / 2, y: comp.y - rotated.h / 2, w: rotated.w, h: rotated.h };
     }
 
+    let textMeasureCanvas = null;
+    let textMeasureCtx = null;
+
+    function getTextMeasureContext() {
+      if (!textMeasureCtx) {
+        textMeasureCanvas = document.createElement('canvas');
+        textMeasureCtx = textMeasureCanvas.getContext('2d');
+      }
+      return textMeasureCtx;
+    }
+
     function measureTextWidth(textValue, fontSize) {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      ctx.font = `${fontSize || 12}px Arial, Helvetica, sans-serif`;
-      return ctx.measureText(String(textValue || '')).width;
+      const ctx = getTextMeasureContext();
+      const safeText = String(textValue || '');
+      const size = fontSize || 12;
+      if (!ctx) {
+        // Fallback heuristic if 2D context is unavailable
+        return safeText.length * size * 0.6;
+      }
+      ctx.font = `${size}px Arial, Helvetica, sans-serif`;
+      return ctx.measureText(safeText).width;
     }
 
     function wrapTextLines(textValue, maxWidth, fontSize) {
