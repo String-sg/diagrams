@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Circuit Diagram Creators</title>
+  <style>
+    :root {
+      --panel: #f3f4f6;
+      --border: #d1d5db;
+      --accent: #2563eb;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #fafafa;
+      color: #111827;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      height: 100vh;
+    }
+    .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: white;
+    }
+    .title-wrap h1 {
+      margin: 0;
+      font-size: 20px;
+    }
+    .title-wrap p {
+      margin: 4px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .toggle {
+      display: inline-grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      background: var(--panel);
+      padding: 6px;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+    }
+    .mode-btn {
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font: inherit;
+      min-width: 170px;
+    }
+    .mode-btn.active {
+      background: white;
+      border-color: var(--accent);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: white;
+    }
+    .fallback {
+      padding: 18px;
+      font-size: 14px;
+      color: #374151;
+      background: #fff7ed;
+      border-top: 1px solid #fed7aa;
+      display: none;
+    }
+    .fallback code {
+      background: #f3f4f6;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="title-wrap">
+      <h1>Circuit Diagram Suite</h1>
+      <p>Switch between symbol view and object view. Note that work will be loss if you toggle between the two modes as there is no save function.</a></p>
+    </div>
+    <div class="toggle" role="tablist" aria-label="Diagram mode">
+      <button class="mode-btn active" id="symbolBtn" role="tab" aria-selected="true">Circuit Diagram</button>
+      <button class="mode-btn" id="objectBtn" role="tab" aria-selected="false">Object Diagram</button>
+    </div>
+  </div>
+
+  <iframe id="toolFrame" title="Circuit diagram tool"></iframe>
+
+  <script>
+    const frame = document.getElementById('toolFrame');
+    const symbolBtn = document.getElementById('symbolBtn');
+    const objectBtn = document.getElementById('objectBtn');
+    const fallbackBox = document.getElementById('fallbackBox');
+
+    const modes = {
+      symbol: 'circuit_diagram_creatorv2.html',
+      object: 'object_circuitv2.html'
+    };
+
+    function setMode(mode) {
+      const isSymbol = mode === 'symbol';
+      frame.src = modes[mode];
+      symbolBtn.classList.toggle('active', isSymbol);
+      objectBtn.classList.toggle('active', !isSymbol);
+      symbolBtn.setAttribute('aria-selected', String(isSymbol));
+      objectBtn.setAttribute('aria-selected', String(!isSymbol));
+      document.title = isSymbol ? 'Circuit Diagram Suite – Circuit Diagram' : 'Circuit Diagram Suite – Object Diagram';
+    }
+
+    frame.addEventListener('error', () => {
+      fallbackBox.style.display = 'block';
+    });
+
+    // If the iframe stays blank because of local file restrictions, at least show the fallback note.
+    setTimeout(() => {
+      try {
+        const doc = frame.contentDocument;
+        if (!doc || !doc.body || !doc.body.children.length) {
+          fallbackBox.style.display = 'block';
+        }
+      } catch (e) {
+        fallbackBox.style.display = 'block';
+      }
+    }, 1200);
+
+    symbolBtn.addEventListener('click', () => setMode('symbol'));
+    objectBtn.addEventListener('click', () => setMode('object'));
+
+    setMode('symbol');
+  </script>
+</body>
+</html>

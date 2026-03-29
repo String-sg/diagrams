@@ -1,0 +1,880 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="tool-id" content="water-tank" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Water Tank Diagram Generator</title>
+<style>
+  :root{
+    --border:#d0d0d0; --bg:#f6f6f6; --text:#111; --muted:#666;
+    --left:360px; --right:320px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,sans-serif;background:var(--bg);color:var(--text)}
+  .app{display:grid;grid-template-columns:var(--left) 1fr var(--right);height:100vh;gap:0}
+  .panel{background:#fff;overflow:auto;padding:14px;border-right:1px solid var(--border)}
+  .panel.right{border-right:none;border-left:1px solid var(--border)}
+  .center{overflow:auto;padding:14px}
+  .card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:12px}
+  h1{font-size:20px;margin:0 0 10px}
+  h2{font-size:15px;margin:14px 0 8px}
+  .hint,.status{font-size:12px;color:var(--muted);line-height:1.45;white-space:pre-wrap}
+  .row{display:grid;grid-template-columns:94px 1fr;gap:6px;align-items:center;margin-bottom:8px}
+  .row.tight{grid-template-columns:1fr}
+  .inline{display:flex;gap:6px;align-items:center}
+  label{font-size:13px}
+  input[type="number"],input[type="text"],select,button{
+    width:100%;padding:10px 12px;font:inherit;border:1px solid var(--border);
+    border-radius:10px;background:#fff;
+  }
+  input[type="range"]{width:100%}
+  button{background:#f3f3f3;cursor:pointer}
+  button:hover{background:#ececec}
+  .btn3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .btn2{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .check{display:flex;gap:8px;align-items:center;font-size:13px;margin:6px 0}
+  #svgWrap{min-height:680px}
+  svg{display:block;width:100%;height:auto;touch-action:none;user-select:none}
+  .mono{font-family:ui-monospace,Menlo,monospace;font-size:12px;background:#fafafa;border:1px solid var(--border);border-radius:8px;padding:8px;max-height:180px;overflow:auto;white-space:pre-wrap}
+  @media (max-width: 1100px){
+    .app{grid-template-columns:1fr}
+    .panel.right{border-left:none}
+    .panel{border-right:none;border-bottom:1px solid var(--border)}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="panel left">
+    <div class="card">
+      <h1>Water Tank Diagram Generator</h1>
+      <div class="hint"> Drag items to move them. Drag the handle of a selected item to resize when available. Make sure nothing is selected when exporting. Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a></div>
+    </div>
+
+    <div class="card">
+      <h2>Tank dimensions (cm)</h2>
+      <div class="row">
+        <label for="lengthCm">Length</label>
+        <div class="inline">
+          <input id="lengthCm" type="number" min="1" value="80" />
+          <label class="check" style="margin:0;white-space:nowrap;"><input id="showAutoLength" type="checkbox" checked> Show</label>
+        </div>
+      </div>
+      <div class="row">
+        <label for="widthCm">Width</label>
+        <input id="widthCm" type="number" min="1" value="50" />
+      </div>
+      <div class="row">
+        <label for="heightCm">Height</label>
+        <div class="inline">
+          <input id="heightCm" type="number" min="1" value="40" />
+          <label class="check" style="margin:0;white-space:nowrap;"><input id="showAutoHeight" type="checkbox" checked> Show</label>
+        </div>
+      </div>
+
+      <h2>Water input</h2>
+      <div class="row">
+        <label for="waterMode">Mode</label>
+        <select id="waterMode">
+          <option value="percent">Percentage</option>
+          <option value="fraction">Fraction</option>
+          <option value="height">Water height (cm)</option>
+          <option value="volume">Volume (L)</option>
+        </select>
+      </div>
+
+      <div id="percentBox">
+        <div class="row">
+          <label for="waterPercent">Percent</label>
+          <input id="waterPercent" type="number" min="0" max="100" value="60" />
+        </div>
+        <input id="waterPercentSlider" type="range" min="0" max="100" step="1" value="60" />
+      </div>
+
+      <div id="fractionBox" style="display:none;">
+        <div class="btn3">
+          <div><label for="fractionNum">Numerator</label><input id="fractionNum" type="number" min="0" value="3" /></div>
+          <div><label for="fractionDen">Denominator</label><input id="fractionDen" type="number" min="1" value="4" /></div>
+          <div style="display:flex;align-items:end;"><button id="fractionApply">Apply</button></div>
+        </div>
+      </div>
+
+      <div id="heightBox" style="display:none;">
+        <div class="row">
+          <label for="waterHeight">Height</label>
+          <input id="waterHeight" type="number" min="0" value="24" />
+        </div>
+      </div>
+
+      <div id="volumeBox" style="display:none;">
+        <div class="row">
+          <label for="waterVolume">Volume (L)</label>
+          <input id="waterVolume" type="number" min="0" value="96" />
+        </div>
+      </div>
+
+      <h2>Water shading</h2>
+      <div class="row">
+        <label for="waterShade">Shade</label>
+        <input id="waterShade" type="number" min="0" max="255" value="176" />
+      </div>
+      <input id="waterShadeSlider" type="range" min="0" max="255" step="1" value="176" />
+
+      <h2>Line thickness</h2>
+      <div class="row">
+        <label for="lineThickness">Thickness</label>
+        <input id="lineThickness" type="number" min="1" max="12" value="4" />
+      </div>
+      <input id="lineThicknessSlider" type="range" min="1" max="12" step="1" value="4" />
+
+      <input id="showHidden" type="checkbox" checked hidden />
+      <input id="debugMode" type="checkbox" hidden />
+    </div>
+  </aside>
+
+  <main class="center">
+    <div id="svgWrap" class="card"></div>
+    <div class="card"><div id="status" class="status">Ready.</div></div>
+    <div id="debugCard" class="card" style="display:none;">
+      <h2 style="margin-top:0;">Debug output</h2>
+      <div id="debugOut" class="mono"></div>
+    </div>
+  </main>
+
+  <aside class="panel right">
+    <div class="card">
+      <h2 style="margin-top:0;">Textbox editor</h2>
+      <div class="row tight">
+        <label for="textboxText">Selected textbox text</label>
+        <input id="textboxText" type="text" value="" />
+      </div>
+      <div class="btn3">
+        <button id="addTextboxBtn">Add textbox</button>
+        <button id="updateTextboxBtn">Update text</button>
+        <button id="deleteTextboxBtn">Delete textbox</button>
+      </div>
+      <div class="hint" style="margin-top:10px;">Click a textbox to select it.
+Drag the selected textbox to move it.
+Type new text here or add another label.</div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Text and labels</h2>
+      <div class="row">
+        <label for="fontSize">Font size</label>
+        <input id="fontSize" type="number" min="8" max="40" value="20" />
+      </div>
+      <label class="check"><input id="showHandles" type="checkbox" checked> Show resize handle on selected item</label>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Tap image</h2>
+      <div class="hint">Uses <b>tap.png</b> from the same folder as this generator file.</div>
+      <div class="btn3" style="margin-top:10px;">
+        <button id="addTapBtn">Add tap image</button>
+        <button id="tapLargerBtn">Tap larger</button>
+        <button id="tapMirrorBtn">Flip mirror</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 style="margin-top:0;">Lines and arrows</h2>
+      <div class="btn3">
+        <button id="addLineBtn">Add vertical line</button>
+        <button id="addVArrowBtn">Add vertical arrow</button>
+        <button id="deleteShapeBtn">Delete selected</button>
+      </div>
+      <div class="btn2" style="margin-top:8px;">
+        <button id="addHArrowBtn">Add horizontal arrow</button>
+        <button id="addDArrowBtn">Add diagonal arrow</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="btn3">
+        <button id="generateBtn">Generate tank</button>
+        <button id="sampleBtn">Reset sample</button>
+        <span id="exportBtn">
+          <button id="exportPngBtn">Export PNG</button>
+        </span>
+      </div>
+      <button id="exportSvgBtn" hidden>Export SVG</button>
+      <button id="copyDebugBtn" hidden>Copy debug</button>
+    </div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const status = $('status'), debugOut = $('debugOut'), debugCard = $('debugCard'), svgWrap = $('svgWrap');
+
+  const S = {
+    textboxes: [],
+    lines: [],
+    arrows: [],
+    taps: [],
+    selectedTextboxId: null,
+    selectedLineId: null,
+    selectedArrowId: null,
+    selectedTapId: null,
+    drag: null
+  };
+
+  const setStatus = (msg, isError=false) => {
+    status.textContent = msg;
+    status.className = 'status' + (isError ? ' error' : ' ok');
+  };
+
+  const logDebug = (obj) => {
+    const show = $('debugMode').checked;
+    debugCard.style.display = show ? 'block' : 'none';
+    if (show) debugOut.textContent = typeof obj === 'string' ? obj : JSON.stringify(obj, null, 2);
+  };
+
+  const num = (id) => {
+    const v = parseFloat($(id).value);
+    return Number.isFinite(v) ? v : NaN;
+  };
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  const esc = (s) => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  const line = (x1,y1,x2,y2, attrs='') => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" ${attrs}/>`;
+  const text = (x,y,str, anchor='middle', size=20) => `<text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${size}" text-anchor="${anchor}" dominant-baseline="middle">${esc(str)}</text>`;
+
+  function syncModeUI() {
+    const mode = $('waterMode').value;
+    $('percentBox').style.display = mode === 'percent' ? 'block' : 'none';
+    $('fractionBox').style.display = mode === 'fraction' ? 'block' : 'none';
+    $('heightBox').style.display = mode === 'height' ? 'block' : 'none';
+    $('volumeBox').style.display = mode === 'volume' ? 'block' : 'none';
+  }
+
+  function syncTextboxInput() {
+    const tb = S.textboxes.find(t => t.id === S.selectedTextboxId);
+    $('textboxText').value = tb ? tb.text : '';
+  }
+
+  function clearSelections(kind) {
+    if (kind !== 'textbox') S.selectedTextboxId = null;
+    if (kind !== 'line') S.selectedLineId = null;
+    if (kind !== 'arrow') S.selectedArrowId = null;
+    if (kind !== 'tap') S.selectedTapId = null;
+  }
+
+  function selectedShape() {
+    if (S.selectedLineId) return {type:'line', id:S.selectedLineId};
+    if (S.selectedArrowId) return {type:'arrow', id:S.selectedArrowId};
+    if (S.selectedTapId) return {type:'tap', id:S.selectedTapId};
+    if (S.selectedTextboxId) return {type:'textbox', id:S.selectedTextboxId};
+    return null;
+  }
+
+  function waterColors() {
+    const base = clamp(Math.round(num('waterShade') || 176), 0, 255);
+    const top = base, front = clamp(base + 8, 0, 255), side = clamp(base - 24, 0, 255);
+    const hx = (n) => n.toString(16).padStart(2, '0');
+    return {
+      top: `#${hx(top)}${hx(top)}${hx(top)}`,
+      front: `#${hx(front)}${hx(front)}${hx(front)}`,
+      side: `#${hx(side)}${hx(side)}${hx(side)}`
+    };
+  }
+
+  function computePercent(lengthCm, widthCm, heightCm) {
+    const mode = $('waterMode').value;
+    if (mode === 'percent') return clamp(num('waterPercent'), 0, 100);
+    if (mode === 'fraction') {
+      const n = num('fractionNum'), d = num('fractionDen');
+      if (!Number.isFinite(n) || !Number.isFinite(d) || d <= 0) throw new Error('Invalid fraction values.');
+      return clamp((n / d) * 100, 0, 100);
+    }
+    if (mode === 'height') {
+      const h = num('waterHeight');
+      if (!Number.isFinite(h) || h < 0) throw new Error('Invalid water height.');
+      return clamp((h / heightCm) * 100, 0, 100);
+    }
+    if (mode === 'volume') {
+      const litres = num('waterVolume');
+      if (!Number.isFinite(litres) || litres < 0) throw new Error('Invalid volume.');
+      const capacityL = (lengthCm * widthCm * heightCm) / 1000;
+      return capacityL === 0 ? 0 : clamp((litres / capacityL) * 100, 0, 100);
+    }
+    return 0;
+  }
+
+  function drawTextbox(tb, fontSize) {
+    const selected = tb.id === S.selectedTextboxId;
+    const w = Math.max(36, tb.text.length * fontSize * 0.58 + 16);
+    return `<g data-kind="textbox" data-id="${tb.id}">
+      <rect x="${tb.x - 8}" y="${tb.y - fontSize + 2}" width="${w}" height="${fontSize + 10}" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+      <text x="${tb.x}" y="${tb.y}" font-family="Arial, sans-serif" font-size="${fontSize}" text-anchor="start" dominant-baseline="alphabetic" fill="#111">${esc(tb.text)}</text>
+    </g>`;
+  }
+
+  function drawVerticalLine(obj) {
+    const selected = obj.id === S.selectedLineId;
+    const showHandle = selected && $('showHandles').checked;
+    const x = obj.x, y1 = obj.y, y2 = obj.y + obj.length;
+    return `<g data-kind="line" data-id="${obj.id}">
+      <line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#111" stroke-width="2" />
+      <rect x="${x - 10}" y="${y1 - 8}" width="20" height="${obj.length + 16}" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+      ${showHandle ? `<circle data-kind="line-handle" data-id="${obj.id}" cx="${x}" cy="${y2}" r="7" fill="#fff" stroke="#111" stroke-width="2" />` : ''}
+    </g>`;
+  }
+
+  function drawDoubleArrow(obj) {
+    const selected = obj.id === S.selectedArrowId;
+    const showHandle = selected && $('showHandles').checked;
+    const x = obj.x, y = obj.y, len = obj.length;
+    const kind = obj.arrowType || 'vertical';
+
+    if (kind === 'horizontal') {
+      const x2 = x + len;
+      return `<g data-kind="arrow" data-id="${obj.id}">
+        <line x1="${x + 11}" y1="${y}" x2="${x2 - 11}" y2="${y}" stroke="#111" stroke-width="2" />
+        <path d="M ${x} ${y} L ${x + 12} ${y - 8} L ${x + 12} ${y + 8} Z" fill="#111" />
+        <path d="M ${x2} ${y} L ${x2 - 12} ${y - 8} L ${x2 - 12} ${y + 8} Z" fill="#111" />
+        <rect x="${Math.min(x, x2) - 8}" y="${y - 12}" width="${Math.abs(len) + 16}" height="24" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+        ${showHandle ? `<circle data-kind="arrow-handle" data-id="${obj.id}" cx="${x2}" cy="${y}" r="7" fill="#fff" stroke="#111" stroke-width="2" />` : ''}
+      </g>`;
+    }
+
+    if (kind === 'diagonal') {
+      const dx = len * 0.72, dy = len * -0.38;
+      const x2 = x + dx, y2 = y + dy;
+      const mag = Math.hypot(dx, dy) || 1;
+      const ux = dx / mag, uy = dy / mag, px = -uy, py = ux;
+      const a1x = x + ux * 12, a1y = y + uy * 12;
+      const a2x = x2 - ux * 12, a2y = y2 - uy * 12;
+      const head1 = `${x} ${y} ${a1x + px * 8} ${a1y + py * 8} ${a1x - px * 8} ${a1y - py * 8}`;
+      const head2 = `${x2} ${y2} ${a2x + px * 8} ${a2y + py * 8} ${a2x - px * 8} ${a2y - py * 8}`;
+      return `<g data-kind="arrow" data-id="${obj.id}">
+        <line x1="${a1x}" y1="${a1y}" x2="${a2x}" y2="${a2y}" stroke="#111" stroke-width="2" />
+        <polygon points="${head1}" fill="#111" />
+        <polygon points="${head2}" fill="#111" />
+        <rect x="${Math.min(x, x2) - 12}" y="${Math.min(y, y2) - 12}" width="${Math.abs(dx) + 24}" height="${Math.abs(dy) + 24}" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+        ${showHandle ? `<circle data-kind="arrow-handle" data-id="${obj.id}" cx="${x2}" cy="${y2}" r="7" fill="#fff" stroke="#111" stroke-width="2" />` : ''}
+      </g>`;
+    }
+
+    const y2 = y + len;
+    return `<g data-kind="arrow" data-id="${obj.id}">
+      <line x1="${x}" y1="${y + 11}" x2="${x}" y2="${y2 - 11}" stroke="#111" stroke-width="2" />
+      <path d="M ${x} ${y} L ${x - 8} ${y + 12} L ${x + 8} ${y + 12} Z" fill="#111" />
+      <path d="M ${x} ${y2} L ${x - 8} ${y2 - 12} L ${x + 8} ${y2 - 12} Z" fill="#111" />
+      <rect x="${x - 12}" y="${Math.min(y, y2) - 8}" width="24" height="${Math.abs(len) + 16}" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+      ${showHandle ? `<circle data-kind="arrow-handle" data-id="${obj.id}" cx="${x}" cy="${y2}" r="7" fill="#fff" stroke="#111" stroke-width="2" />` : ''}
+    </g>`;
+  }
+
+  function drawTapImage(obj) {
+    const selected = obj.id === S.selectedTapId;
+    const showHandle = selected && $('showHandles').checked;
+    const width = 180, height = 180;
+    const scaleX = obj.flip ? -obj.scale : obj.scale;
+    const boxW = width * obj.scale, boxH = height * obj.scale;
+    const handleX = obj.x + (obj.flip ? -boxW * 0.5 : boxW * 0.5);
+    const handleY = obj.y + boxH * 0.5;
+    return `<g data-kind="tap" data-id="${obj.id}">
+      <g transform="translate(${obj.x}, ${obj.y}) scale(${scaleX}, ${obj.scale})">
+        <image href="tap.png" x="${-width/2}" y="${-height/2}" width="${width}" height="${height}" preserveAspectRatio="xMidYMid meet" />
+      </g>
+      <rect x="${obj.x - boxW * 0.5}" y="${obj.y - boxH * 0.5}" width="${boxW}" height="${boxH}" fill="rgba(255,255,255,0.001)" stroke="${selected ? '#666' : 'none'}" stroke-dasharray="4 3" />
+      ${showHandle ? `<circle data-kind="tap-handle" data-id="${obj.id}" cx="${handleX}" cy="${handleY}" r="7" fill="#fff" stroke="#111" stroke-width="2" />` : ''}
+    </g>`;
+  }
+
+  function render() {
+    try {
+      syncModeUI();
+
+      const lengthCm = num('lengthCm');
+      const widthCm = num('widthCm');
+      const heightCm = num('heightCm');
+      const fontSize = clamp(num('fontSize') || 20, 8, 40);
+      const waterShade = clamp(Math.round(num('waterShade') || 176), 0, 255);
+      const lineThickness = clamp(Math.round(num('lineThickness') || 4), 1, 12);
+
+      $('waterShade').value = waterShade;
+      $('waterShadeSlider').value = waterShade;
+      $('lineThickness').value = lineThickness;
+      $('lineThicknessSlider').value = lineThickness;
+
+      if (![lengthCm, widthCm, heightCm].every(v => Number.isFinite(v) && v > 0)) {
+        throw new Error('Length, width, and height must all be positive numbers.');
+      }
+
+      const percent = computePercent(lengthCm, widthCm, heightCm);
+      $('waterPercent').value = Math.round(percent * 100) / 100;
+      $('waterPercentSlider').value = Math.round(percent);
+      $('waterHeight').value = (heightCm * percent / 100).toFixed(2).replace(/\.00$/, '');
+      $('waterVolume').value = ((lengthCm * widthCm * heightCm / 1000) * percent / 100).toFixed(2).replace(/\.00$/, '');
+
+      const viewW = 1100, viewH = 760;
+      const marginLeft = 130, marginTop = 90;
+      const maxFrontW = 520, maxFrontH = 340, maxDepth = 220;
+      const sx = maxFrontW / lengthCm, sy = maxFrontH / heightCm, sd = maxDepth / widthCm, k = Math.min(sx, sy, sd);
+
+      const frontW = lengthCm * k, frontH = heightCm * k, depthX = widthCm * k * 0.72, depthY = widthCm * k * 0.38;
+      const x0 = marginLeft, y0 = marginTop + depthY + 110;
+      const A = {x:x0, y:y0}, B = {x:x0 + frontW, y:y0}, C = {x:x0 + frontW, y:y0 + frontH}, D = {x:x0, y:y0 + frontH};
+      const E = {x:A.x + depthX, y:A.y - depthY}, F = {x:B.x + depthX, y:B.y - depthY}, G = {x:C.x + depthX, y:C.y - depthY}, H = {x:D.x + depthX, y:D.y - depthY};
+
+      const waterH = frontH * percent / 100;
+      const waterFrontTopY = D.y - waterH;
+      const waterTopFrontLeft = {x:A.x, y:waterFrontTopY};
+      const waterTopFrontRight = {x:B.x, y:waterFrontTopY};
+      const waterTopBackLeft = {x:waterTopFrontLeft.x + depthX, y:waterTopFrontLeft.y - depthY};
+      const waterTopBackRight = {x:waterTopFrontRight.x + depthX, y:waterTopFrontRight.y - depthY};
+
+      const showAutoLength = $('showAutoLength').checked;
+      const showAutoHeight = $('showAutoHeight').checked;
+      const showHidden = $('showHidden').checked;
+      const cols = waterColors();
+
+      const hiddenStyle = `stroke="#111" stroke-width="${Math.max(1, lineThickness * 0.7)}" stroke-dasharray="6 5" fill="none"`;
+      const edgeStyle = `stroke="#111" stroke-width="${lineThickness}" fill="none"`;
+      const thinStyle = edgeStyle;
+
+      let svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${viewW} ${viewH}" role="img" aria-label="Water tank diagram">
+        <defs>
+          <clipPath id="tankFrontClip">
+            <polygon points="${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y} ${D.x},${D.y}" />
+          </clipPath>
+        </defs>
+        <rect x="0" y="0" width="100%" height="100%" fill="none" />`;
+
+      if (percent > 0) {
+        svg += `<polygon points="${waterTopBackLeft.x},${waterTopBackLeft.y} ${waterTopBackRight.x},${waterTopBackRight.y} ${waterTopFrontRight.x},${waterTopFrontRight.y} ${waterTopFrontLeft.x},${waterTopFrontLeft.y}" fill="${cols.top}" stroke="#111" stroke-width="${lineThickness}" />`;
+        svg += `<rect x="${A.x}" y="${waterFrontTopY}" width="${frontW}" height="${waterH}" fill="${cols.front}" clip-path="url(#tankFrontClip)" />`;
+        svg += `<polygon points="${waterTopFrontRight.x},${waterTopFrontRight.y} ${waterTopBackRight.x},${waterTopBackRight.y} ${G.x},${G.y} ${C.x},${C.y}" fill="${cols.side}" />`;
+        svg += line(waterTopFrontLeft.x, waterTopFrontLeft.y, waterTopFrontRight.x, waterTopFrontRight.y, edgeStyle);
+        svg += line(waterTopFrontRight.x, waterTopFrontRight.y, waterTopBackRight.x, waterTopBackRight.y, edgeStyle);
+      }
+
+      svg += line(A.x,A.y,B.x,B.y,edgeStyle);
+      svg += line(B.x,B.y,C.x,C.y,edgeStyle);
+      svg += line(C.x,C.y,D.x,D.y,edgeStyle);
+      svg += line(D.x,D.y,A.x,A.y,edgeStyle);
+      svg += line(A.x,A.y,E.x,E.y,thinStyle);
+      svg += line(B.x,B.y,F.x,F.y,thinStyle);
+      svg += line(E.x,E.y,F.x,F.y,thinStyle);
+      svg += line(F.x,F.y,G.x,G.y,thinStyle);
+      svg += line(C.x,C.y,G.x,G.y,edgeStyle);
+
+      if (showHidden) {
+        svg += line(D.x,D.y,H.x,H.y,hiddenStyle);
+        svg += line(H.x,H.y,G.x,G.y,hiddenStyle);
+        if (percent > 0 && waterTopBackLeft.y > E.y && waterTopBackLeft.y < H.y) {
+          svg += line(E.x, E.y, E.x, waterTopBackLeft.y, thinStyle);
+          svg += line(E.x, waterTopBackLeft.y, H.x, H.y, hiddenStyle);
+        } else {
+          svg += line(E.x,E.y,H.x,H.y,hiddenStyle);
+        }
+      } else {
+        svg += line(E.x,E.y,H.x,H.y,thinStyle);
+      }
+
+      if (showAutoLength) svg += text((A.x + B.x) / 2, D.y + 24, `${lengthCm} cm`, 'middle', fontSize);
+      if (showAutoHeight) svg += text(F.x + 18, (F.y + G.y) / 2, `${heightCm} cm`, 'start', fontSize);
+
+      S.lines.forEach(obj => svg += drawVerticalLine(obj));
+      S.arrows.forEach(obj => svg += drawDoubleArrow(obj));
+      S.taps.forEach(obj => svg += drawTapImage(obj));
+      S.textboxes.forEach(tb => svg += drawTextbox(tb, fontSize));
+
+      if ($('debugMode').checked) {
+        [A,B,C,D,E,F,G,H].forEach((p, i) => {
+          svg += `<circle cx="${p.x}" cy="${p.y}" r="4" fill="#c00" />`;
+          svg += text(p.x + 10, p.y - 12, String.fromCharCode(65+i), 'start', 14);
+        });
+      }
+
+      svg += `</svg>`;
+      svgWrap.innerHTML = svg;
+
+      logDebug({
+        inputs: {lengthCm, widthCm, heightCm, percent, waterShade, lineThickness, fontSize},
+        selected: selectedShape(),
+        drag: S.drag,
+        counts: {textboxes:S.textboxes.length, lines:S.lines.length, arrows:S.arrows.length, taps:S.taps.length}
+      });
+
+      setStatus(`Rendered successfully. Water level: ${percent.toFixed(2)}%.`);
+    } catch (err) {
+      const msg = err && err.message ? err.message : String(err);
+      svgWrap.innerHTML = '<div class="error">Render failed.</div>';
+      logDebug({error: msg, stack: err && err.stack ? err.stack : null});
+      setStatus(`Render failed: ${msg}`, true);
+      console.error(err);
+    }
+  }
+
+  function svgPoint(clientX, clientY) {
+    const svg = svgWrap.querySelector('svg');
+    if (!svg) return null;
+    const pt = svg.createSVGPoint();
+    pt.x = clientX; pt.y = clientY;
+    return pt.matrixTransform(svg.getScreenCTM().inverse());
+  }
+
+  function startDrag(kind, id, clientX, clientY) {
+    const p = svgPoint(clientX, clientY);
+    if (!p) return;
+    if (kind === 'textbox') {
+      const tb = S.textboxes.find(t => t.id === id);
+      if (!tb) return;
+      S.drag = {kind, id, offsetX: p.x - tb.x, offsetY: p.y - tb.y};
+    } else if (kind === 'line-move') {
+      const obj = S.lines.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, offsetX: p.x - obj.x, offsetY: p.y - obj.y};
+    } else if (kind === 'line-resize') {
+      const obj = S.lines.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, anchorY: obj.y};
+    } else if (kind === 'arrow-move') {
+      const obj = S.arrows.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, offsetX: p.x - obj.x, offsetY: p.y - obj.y};
+    } else if (kind === 'arrow-resize') {
+      const obj = S.arrows.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, anchorX: obj.x, anchorY: obj.y, arrowType: obj.arrowType || 'vertical'};
+    } else if (kind === 'tap-move') {
+      const obj = S.taps.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, offsetX: p.x - obj.x, offsetY: p.y - obj.y};
+    } else if (kind === 'tap-resize') {
+      const obj = S.taps.find(t => t.id === id);
+      if (!obj) return;
+      S.drag = {kind, id, anchorX: obj.x, anchorY: obj.y};
+    }
+  }
+
+  function onPointerDown(e) {
+    const target = e.target.closest('[data-kind]');
+    if (!target) {
+      S.selectedTextboxId = null;
+      S.selectedLineId = null;
+      S.selectedArrowId = null;
+      S.selectedTapId = null;
+      syncTextboxInput();
+      render();
+      return;
+    }
+
+    const kind = target.dataset.kind;
+    const id = target.dataset.id;
+
+    if (kind === 'textbox') {
+      S.selectedTextboxId = id;
+      clearSelections('textbox');
+      syncTextboxInput();
+      startDrag('textbox', id, e.clientX, e.clientY);
+    } else if (kind === 'line') {
+      S.selectedLineId = id;
+      clearSelections('line');
+      syncTextboxInput();
+      startDrag('line-move', id, e.clientX, e.clientY);
+    } else if (kind === 'line-handle') {
+      S.selectedLineId = id;
+      clearSelections('line');
+      startDrag('line-resize', id, e.clientX, e.clientY);
+    } else if (kind === 'arrow') {
+      S.selectedArrowId = id;
+      clearSelections('arrow');
+      syncTextboxInput();
+      startDrag('arrow-move', id, e.clientX, e.clientY);
+    } else if (kind === 'arrow-handle') {
+      S.selectedArrowId = id;
+      clearSelections('arrow');
+      startDrag('arrow-resize', id, e.clientX, e.clientY);
+    } else if (kind === 'tap') {
+      S.selectedTapId = id;
+      clearSelections('tap');
+      syncTextboxInput();
+      startDrag('tap-move', id, e.clientX, e.clientY);
+    } else if (kind === 'tap-handle') {
+      S.selectedTapId = id;
+      clearSelections('tap');
+      startDrag('tap-resize', id, e.clientX, e.clientY);
+    }
+
+    render();
+  }
+
+  function onPointerMove(e) {
+    if (!S.drag) return;
+    const p = svgPoint(e.clientX, e.clientY);
+    if (!p) return;
+
+    if (S.drag.kind === 'textbox') {
+      const tb = S.textboxes.find(t => t.id === S.drag.id);
+      if (!tb) return;
+      tb.x = p.x - S.drag.offsetX;
+      tb.y = p.y - S.drag.offsetY;
+    } else if (S.drag.kind === 'line-move') {
+      const obj = S.lines.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      obj.x = p.x - S.drag.offsetX;
+      obj.y = p.y - S.drag.offsetY;
+    } else if (S.drag.kind === 'line-resize') {
+      const obj = S.lines.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      obj.length = Math.max(18, p.y - S.drag.anchorY);
+    } else if (S.drag.kind === 'arrow-move') {
+      const obj = S.arrows.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      obj.x = p.x - S.drag.offsetX;
+      obj.y = p.y - S.drag.offsetY;
+    } else if (S.drag.kind === 'arrow-resize') {
+      const obj = S.arrows.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      const k = S.drag.arrowType || 'vertical';
+      if (k === 'horizontal') {
+        obj.length = Math.max(24, p.x - S.drag.anchorX);
+      } else if (k === 'diagonal') {
+        obj.length = Math.max(24, (p.x - S.drag.anchorX) / 0.72);
+      } else {
+        obj.length = Math.max(24, p.y - S.drag.anchorY);
+      }
+    } else if (S.drag.kind === 'tap-move') {
+      const obj = S.taps.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      obj.x = p.x - S.drag.offsetX;
+      obj.y = p.y - S.drag.offsetY;
+    } else if (S.drag.kind === 'tap-resize') {
+      const obj = S.taps.find(t => t.id === S.drag.id);
+      if (!obj) return;
+      const dist = Math.hypot(p.x - S.drag.anchorX, p.y - S.drag.anchorY);
+      obj.scale = Math.max(0.2, Math.min(3, dist / 120));
+    }
+
+    render();
+  }
+
+  function onPointerUp() {
+    S.drag = null;
+  }
+
+  function exportSvg() {
+    const svg = svgWrap.querySelector('svg');
+    if (!svg) return setStatus('Nothing to export yet.', true);
+    const blob = new Blob([svg.outerHTML], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'water_tank_diagram.svg'; a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function exportPng() {
+    const svg = svgWrap.querySelector('svg');
+    if (!svg) return setStatus('Nothing to export yet.', true);
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    clone.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+    const vb = svg.viewBox.baseVal;
+    const exportW = Math.round(vb.width || 1100), exportH = Math.round(vb.height || 760);
+    clone.setAttribute('width', exportW); clone.setAttribute('height', exportH);
+    const serialized = new XMLSerializer().serializeToString(clone);
+    const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(serialized);
+    const img = new Image();
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = exportW; canvas.height = exportH;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, exportW, exportH);
+        ctx.drawImage(img, 0, 0, exportW, exportH);
+        const a = document.createElement('a');
+        a.download = 'water_tank_diagram.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+        setStatus('PNG exported successfully.');
+      } catch (err) {
+        setStatus('PNG export failed while drawing onto canvas: ' + (err.message || err), true);
+      }
+    };
+    img.onerror = () => setStatus('PNG export failed while loading SVG into image.', true);
+    img.src = svgDataUrl;
+  }
+
+  function copyDebug() {
+    const txt = debugOut.textContent || status.textContent;
+    navigator.clipboard.writeText(txt).then(() => setStatus('Debug text copied.')).catch(() => setStatus('Could not copy debug text.', true));
+  }
+
+  function loadSample() {
+    $('lengthCm').value = 80;
+    $('widthCm').value = 50;
+    $('heightCm').value = 40;
+    $('waterMode').value = 'percent';
+    $('waterPercent').value = 60;
+    $('waterPercentSlider').value = 60;
+    $('fractionNum').value = 3;
+    $('fractionDen').value = 4;
+    $('waterHeight').value = 24;
+    $('waterVolume').value = 96;
+    $('waterShade').value = 176;
+    $('waterShadeSlider').value = 176;
+    $('lineThickness').value = 4;
+    $('lineThicknessSlider').value = 4;
+    $('fontSize').value = 20;
+    $('showAutoLength').checked = true;
+    $('showAutoHeight').checked = true;
+    $('showHandles').checked = true;
+
+    S.textboxes = [{id:'tb1', x:585, y:520, text:'50 cm'}];
+    S.lines = [];
+    S.arrows = [];
+    S.taps = [];
+    S.selectedTextboxId = 'tb1';
+    S.selectedLineId = null;
+    S.selectedArrowId = null;
+    S.selectedTapId = null;
+    S.drag = null;
+
+    syncTextboxInput();
+    syncModeUI();
+    render();
+  }
+
+  $('waterMode').addEventListener('change', () => { syncModeUI(); render(); });
+  $('waterPercent').addEventListener('input', () => { $('waterPercentSlider').value = clamp(num('waterPercent') || 0, 0, 100); render(); });
+  $('waterPercentSlider').addEventListener('input', () => { $('waterPercent').value = $('waterPercentSlider').value; render(); });
+  $('waterShade').addEventListener('input', () => { $('waterShadeSlider').value = clamp(num('waterShade') || 176, 0, 255); render(); });
+  $('waterShadeSlider').addEventListener('input', () => { $('waterShade').value = $('waterShadeSlider').value; render(); });
+  $('lineThickness').addEventListener('input', () => { $('lineThicknessSlider').value = clamp(num('lineThickness') || 4, 1, 12); render(); });
+  $('lineThicknessSlider').addEventListener('input', () => { $('lineThickness').value = $('lineThicknessSlider').value; render(); });
+
+  ['lengthCm','widthCm','heightCm','fractionNum','fractionDen','waterHeight','waterVolume','fontSize','showAutoLength','showAutoHeight','showHidden','showHandles','debugMode']
+    .forEach(id => $(id).addEventListener('input', render));
+
+  $('fractionApply').addEventListener('click', render);
+
+  $('textboxText').addEventListener('input', () => {
+    const tb = S.textboxes.find(t => t.id === S.selectedTextboxId);
+    if (!tb) return;
+    tb.text = $('textboxText').value;
+    render();
+  });
+
+  $('addTextboxBtn').addEventListener('click', () => {
+    const id = 'tb' + Date.now();
+    S.textboxes.push({id, x:120, y:120, text: $('textboxText').value || 'Text'});
+    S.selectedTextboxId = id;
+    clearSelections('textbox');
+    syncTextboxInput();
+    render();
+  });
+
+  $('updateTextboxBtn').addEventListener('click', () => {
+    const tb = S.textboxes.find(t => t.id === S.selectedTextboxId);
+    if (!tb) return setStatus('Select or add a textbox first.', true);
+    tb.text = $('textboxText').value || 'Text';
+    render();
+  });
+
+  $('deleteTextboxBtn').addEventListener('click', () => {
+    if (!S.selectedTextboxId) return setStatus('Select a textbox first.', true);
+    S.textboxes = S.textboxes.filter(t => t.id !== S.selectedTextboxId);
+    S.selectedTextboxId = S.textboxes[0]?.id || null;
+    syncTextboxInput();
+    render();
+  });
+
+  $('addLineBtn').addEventListener('click', () => {
+    const id = 'line' + Date.now();
+    S.lines.push({id, x:350, y:140, length:120});
+    S.selectedLineId = id;
+    clearSelections('line');
+    render();
+  });
+
+  $('addVArrowBtn').addEventListener('click', () => {
+    const id = 'arrow' + Date.now();
+    S.arrows.push({id, x:820, y:160, length:140, arrowType:'vertical'});
+    S.selectedArrowId = id;
+    clearSelections('arrow');
+    render();
+  });
+
+  $('addHArrowBtn').addEventListener('click', () => {
+    const id = 'arrow' + Date.now();
+    S.arrows.push({id, x:180, y:640, length:180, arrowType:'horizontal'});
+    S.selectedArrowId = id;
+    clearSelections('arrow');
+    render();
+  });
+
+  $('addDArrowBtn').addEventListener('click', () => {
+    const id = 'arrow' + Date.now();
+    S.arrows.push({id, x:690, y:630, length:140, arrowType:'diagonal'});
+    S.selectedArrowId = id;
+    clearSelections('arrow');
+    render();
+  });
+
+  $('addTapBtn').addEventListener('click', () => {
+    const id = 'tap' + Date.now();
+    S.taps.push({id, x:820, y:180, scale:0.8, flip:false});
+    S.selectedTapId = id;
+    clearSelections('tap');
+    render();
+  });
+
+  $('tapLargerBtn').addEventListener('click', () => {
+    const obj = S.taps.find(t => t.id === S.selectedTapId);
+    if (!obj) return setStatus('Select a tap image first.', true);
+    obj.scale = Math.min(3, obj.scale + 0.1);
+    render();
+  });
+
+  $('tapMirrorBtn').addEventListener('click', () => {
+    const obj = S.taps.find(t => t.id === S.selectedTapId);
+    if (!obj) return setStatus('Select a tap image first.', true);
+    obj.flip = !obj.flip;
+    render();
+  });
+
+  $('deleteShapeBtn').addEventListener('click', () => {
+    if (S.selectedLineId) {
+      S.lines = S.lines.filter(t => t.id !== S.selectedLineId);
+      S.selectedLineId = null; render(); return;
+    }
+    if (S.selectedArrowId) {
+      S.arrows = S.arrows.filter(t => t.id !== S.selectedArrowId);
+      S.selectedArrowId = null; render(); return;
+    }
+    if (S.selectedTapId) {
+      S.taps = S.taps.filter(t => t.id !== S.selectedTapId);
+      S.selectedTapId = null; render(); return;
+    }
+    setStatus('Select a line, arrow, or tap image first.', true);
+  });
+
+  $('generateBtn').addEventListener('click', render);
+  $('sampleBtn').addEventListener('click', loadSample);
+  $('exportPngBtn').addEventListener('click', exportPng);
+  $('exportSvgBtn').addEventListener('click', exportSvg);
+  $('copyDebugBtn').addEventListener('click', copyDebug);
+
+  svgWrap.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
+  window.addEventListener('pointerup', onPointerUp);
+
+  window.addEventListener('error', (e) => {
+    const msg = `Window error: ${e.message} at ${e.filename || 'inline'}:${e.lineno || 0}`;
+    logDebug(msg + (e.error && e.error.stack ? `\n${e.error.stack}` : ''));
+    setStatus(msg, true);
+  });
+
+  loadSample();
+})();
+</script>
+<script src="/tracker.js"></script>
+</body>
+</html>

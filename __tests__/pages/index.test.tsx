@@ -9,9 +9,19 @@ describe('Index page', () => {
     expect(screen.getByRole('heading', { name: /diagram tools/i })).toBeInTheDocument()
   })
 
-  it('shows a card for Circuit Diagrams', () => {
+  it('shows a card for Circuit Diagrams (Pri)', () => {
     render(<Home />)
-    expect(screen.getByText('Circuit Diagrams')).toBeInTheDocument()
+    expect(screen.getByText('Circuit Diagrams (Pri)')).toBeInTheDocument()
+  })
+
+  it('shows a card for Circuit Diagrams (Sec/JC)', () => {
+    render(<Home />)
+    expect(screen.getByText('Circuit Diagrams (Sec/JC)')).toBeInTheDocument()
+  })
+
+  it('shows a card for Water Tank Diagram Generator', () => {
+    render(<Home />)
+    expect(screen.getByText('Water Tank Diagram Generator')).toBeInTheDocument()
   })
 
   it('shows a card for Isometric Cube Builder', () => {
@@ -19,10 +29,22 @@ describe('Index page', () => {
     expect(screen.getByText('Isometric Cube Builder')).toBeInTheDocument()
   })
 
-  it('links circuit card to /tools/circuits', () => {
+  it('links Pri circuit card to /tools/circuits', () => {
     render(<Home />)
-    const link = screen.getByRole('link', { name: /circuit diagrams/i })
+    const link = screen.getByRole('link', { name: /circuit diagrams \(pri\)/i })
     expect(link).toHaveAttribute('href', '/tools/circuits')
+  })
+
+  it('links Sec/JC circuit card to /tools/circuits-secjc', () => {
+    render(<Home />)
+    const link = screen.getByRole('link', { name: /circuit diagrams \(sec\/jc\)/i })
+    expect(link).toHaveAttribute('href', '/tools/circuits-secjc')
+  })
+
+  it('links water tank card to /tools/water-tank', () => {
+    render(<Home />)
+    const link = screen.getByRole('link', { name: /water tank diagram generator/i })
+    expect(link).toHaveAttribute('href', '/tools/water-tank')
   })
 
   it('links cube card to /tools/isometric-cube', () => {

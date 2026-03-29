@@ -3,9 +3,21 @@ import Link from 'next/link'
 const tools = [
   {
     href: '/tools/circuits',
-    title: 'Circuit Diagrams',
-    description: 'Draw symbol or object-style circuit diagrams. Export as PNG.',
+    title: 'Circuit Diagrams (Pri)',
+    description: 'Draw symbol or object-style circuit diagrams for primary school. Export as PNG.',
     badge: 'Symbol · Object',
+  },
+  {
+    href: '/tools/circuits-secjc',
+    title: 'Circuit Diagrams (Sec/JC)',
+    description: 'Draw circuit diagrams with Sec/JC components: transistor, transformer, and more.',
+    badge: 'Sec · JC',
+  },
+  {
+    href: '/tools/water-tank',
+    title: 'Water Tank Diagram Generator',
+    description: 'Generate water tank diagrams with customisable dimensions and water levels.',
+    badge: 'Pri · Sec',
   },
   {
     href: '/tools/isometric-cube',
