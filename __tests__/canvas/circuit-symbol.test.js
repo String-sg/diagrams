@@ -19,6 +19,7 @@ beforeAll(() => {
     <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
     <button class="tool-btn" data-tool="delete">Delete</button>
     <button id="rotateBtn">Rotate</button>
+    <button id="rotate180Btn">Rotate 180°</button>
     <button id="toggleGridBtn">Hide Grid</button>
     <input id="batteryCells" type="number" value="2" />
     <button id="undoBtn">Undo</button>
@@ -27,6 +28,13 @@ beforeAll(() => {
     <button id="exportBtn">Export PNG</button>
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
+    <button id="zoomInBtn">Zoom In</button>
+    <button id="zoomOutBtn">Zoom Out</button>
+    <button id="zoomResetBtn">Reset Zoom</button>
+    <input id="textValue" type="text" />
+    <input id="fontSize" type="number" />
+    <button id="addTextBtn">Add Text</button>
+    <button id="updateTextBtn">Update Selected</button>
   `;
   ({ snap, gcd, componentSize, getComponentNodes, GRID } = loadCircuitScript(
     'circuit_diagram_creatorv2.html',
@@ -40,7 +48,7 @@ describe('snap()', () => {
   it('snaps a value below midpoint down', () => expect(snap(10)).toBe(0))
   it('snaps a value above midpoint up', () => expect(snap(20)).toBe(28))
   it('snaps a large value correctly', () => expect(snap(56)).toBe(56))
-  it('snaps a negative value', () => expect(snap(-10)).toBe(0))
+  it('snaps a negative value', () => expect(snap(-10)).toBe(-0))
 })
 
 describe('gcd()', () => {
@@ -51,19 +59,19 @@ describe('gcd()', () => {
 
 describe('componentSize()', () => {
   it('returns bulb dimensions', () => {
-    expect(componentSize('bulb')).toEqual({ w: 58, h: 58 })
+    expect(componentSize('bulb')).toEqual({ w: expect.closeTo(46.4, 5), h: expect.closeTo(46.4, 5) })
   })
 
   it('returns battery dimensions for 2 cells', () => {
-    expect(componentSize('battery', 2)).toEqual({ w: 70, h: 44 })
+    expect(componentSize('battery', 2)).toEqual({ w: 56, h: 35.2 })
   })
 
   it('returns battery dimensions for 4 cells', () => {
-    expect(componentSize('battery', 4)).toEqual({ w: 106, h: 44 })
+    expect(componentSize('battery', 4)).toEqual({ w: expect.closeTo(84.8, 5), h: 35.2 })
   })
 
   it('returns default dimensions for unknown type', () => {
-    expect(componentSize('unknown')).toEqual({ w: 80, h: 30 })
+    expect(componentSize('unknown')).toEqual({ w: 64, h: 24 })
   })
 })
 
@@ -72,15 +80,15 @@ describe('getComponentNodes()', () => {
     const comp = { type: 'bulb', x: 100, y: 100, rotation: 0 }
     const nodes = getComponentNodes(comp)
     expect(nodes).toHaveLength(2)
-    expect(nodes[0]).toEqual({ x: 71, y: 100 })
-    expect(nodes[1]).toEqual({ x: 129, y: 100 })
+    expect(nodes[0]).toEqual({ x: 76.8, y: 100 })
+    expect(nodes[1]).toEqual({ x: 123.2, y: 100 })
   })
 
   it('places bulb nodes top/bottom at rotation 90°', () => {
     const comp = { type: 'bulb', x: 100, y: 100, rotation: 90 }
     const nodes = getComponentNodes(comp)
-    expect(nodes[0]).toEqual({ x: 100, y: 71 })
-    expect(nodes[1]).toEqual({ x: 100, y: 129 })
+    expect(nodes[0]).toEqual({ x: 100, y: 76.8 })
+    expect(nodes[1]).toEqual({ x: 100, y: 123.2 })
   })
 
   it('rotation 180° produces same layout as 0° (mod 180)', () => {
@@ -92,8 +100,8 @@ describe('getComponentNodes()', () => {
   it('places battery nodes at correct offsets for 2 cells', () => {
     const comp = { type: 'battery', x: 100, y: 100, rotation: 0, cells: 2 }
     const nodes = getComponentNodes(comp)
-    // battery w = 34 + 2*18 = 70; half = 35
-    expect(nodes[0]).toEqual({ x: 65, y: 100 })
-    expect(nodes[1]).toEqual({ x: 135, y: 100 })
+    // battery w = (34 + 2*18) * 0.8 = 56; half = 28
+    expect(nodes[0]).toEqual({ x: 72, y: 100 })
+    expect(nodes[1]).toEqual({ x: 128, y: 100 })
   })
 })
