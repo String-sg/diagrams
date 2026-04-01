@@ -30,10 +30,12 @@ async function getMetrics() {
   }
 }
 
-const TOOLS = ['circuit-symbol', 'circuit-object', 'isometric-cube']
+const TOOLS = ['circuit-symbol', 'circuit-object', 'circuit-secjc', 'water-tank', 'isometric-cube']
 const LABELS: Record<string, string> = {
   'circuit-symbol': 'Circuit — Symbol',
   'circuit-object': 'Circuit — Object',
+  'circuit-secjc': 'Circuit — Sec/JC',
+  'water-tank': 'Water Tank',
   'isometric-cube': 'Isometric Cube',
 }
 
