@@ -85,11 +85,16 @@ describe('getLocalNodes()', () => {
   it('switch has 2 connection points', () => {
     const nodes = getLocalNodes({ type: 'switch' })
     expect(nodes).toHaveLength(2)
+<<<<<<< HEAD
     // COMPONENT_SCALE=0.8 applied: 40 * 0.8 = 32
     expect(nodes[0].x).toBeCloseTo(-32)
     expect(nodes[0].y).toBeCloseTo(0)
     expect(nodes[1].x).toBeCloseTo(32)
     expect(nodes[1].y).toBeCloseTo(0)
+=======
+    expect(nodes[0]).toEqual({ x: -32, y: 0 })
+    expect(nodes[1]).toEqual({ x: 32, y: 0 })
+>>>>>>> ce84d90250acc7238cb24c8ac69073d1a33303ca
   })
 
   it('unknown component returns empty array', () => {
@@ -101,22 +106,33 @@ describe('getComponentNodes()', () => {
   it('battery at (100,100) rotation 0° → top/bottom world positions', () => {
     const comp = { type: 'battery', x: 100, y: 100, rotation: 0 }
     const nodes = getComponentNodes(comp)
+<<<<<<< HEAD
     // local y = ±36.8 (46 * 0.8)
     expect(nodes[0].x).toBeCloseTo(100)
     expect(nodes[0].y).toBeCloseTo(63.2)
     expect(nodes[1].x).toBeCloseTo(100)
     expect(nodes[1].y).toBeCloseTo(136.8)
+=======
+    expect(nodes[0]).toEqual({ x: 100, y: expect.closeTo(63.2, 5) })
+    expect(nodes[1]).toEqual({ x: 100, y: expect.closeTo(136.8, 5) })
+>>>>>>> ce84d90250acc7238cb24c8ac69073d1a33303ca
   })
 
   it('battery at (100,100) rotation 90° → left/right world positions', () => {
     const comp = { type: 'battery', x: 100, y: 100, rotation: 90 }
     const nodes = getComponentNodes(comp)
     // rotatePoint(0, -36.8, 90) → (36.8, 0)
+<<<<<<< HEAD
     expect(nodes[0].x).toBeCloseTo(136.8)
     expect(nodes[0].y).toBeCloseTo(100)
     // rotatePoint(0, 36.8, 90) → (-36.8, 0)
     expect(nodes[1].x).toBeCloseTo(63.2)
     expect(nodes[1].y).toBeCloseTo(100)
+=======
+    expect(nodes[0]).toEqual({ x: expect.closeTo(136.8, 5), y: 100 })
+    // rotatePoint(0, 36.8, 90) → (-36.8, 0)
+    expect(nodes[1]).toEqual({ x: expect.closeTo(63.2, 5), y: 100 })
+>>>>>>> ce84d90250acc7238cb24c8ac69073d1a33303ca
   })
 
   it('bulb at (100,100) rotation 0° returns 3 world-space nodes', () => {
@@ -131,10 +147,15 @@ describe('getComponentNodes()', () => {
   it('switch at (0,0) rotation 0° returns its two endpoints', () => {
     const comp = { type: 'switch', x: 0, y: 0, rotation: 0 }
     const nodes = getComponentNodes(comp)
+<<<<<<< HEAD
     // COMPONENT_SCALE=0.8: 40 * 0.8 = 32
     expect(nodes[0].x).toBeCloseTo(-32)
     expect(nodes[0].y).toBeCloseTo(0)
     expect(nodes[1].x).toBeCloseTo(32)
     expect(nodes[1].y).toBeCloseTo(0)
+=======
+    expect(nodes[0]).toEqual({ x: -32, y: 0 })
+    expect(nodes[1]).toEqual({ x: 32, y: 0 })
+>>>>>>> ce84d90250acc7238cb24c8ac69073d1a33303ca
   })
 })
