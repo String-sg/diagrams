@@ -244,6 +244,58 @@
     <div class="action-row single">
       <button class="action-btn" id="exportBtn">Export PNG</button>
     </div>
+
+    <h2>Properties</h2>
+    <div class="tool-section">
+      <div class="field">
+        <label for="batteryCells">Battery cells in series</label>
+        <input id="batteryCells" type="number" min="1" max="8" value="2" />
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+      
+      <div class="field">
+        <label for="magnetBlocks">Solenoid length (Even grids)</label>
+        <input id="magnetBlocks" type="number" min="2" max="16" step="2" value="4" />
+      </div>
+      <div class="field">
+        <label for="magnetCoils">Solenoid coils</label>
+        <input id="magnetCoils" type="number" min="1" max="25" value="5" />
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+
+      <div class="field">
+        <label for="resistorFill">Resistor Pattern</label>
+        <select id="resistorFill">
+          <option value="white">White (Default)</option>
+          <option value="black">Black</option>
+          <option value="grey">Grey</option>
+          <option value="dotted">Dotted</option>
+          <option value="hatched">Hatched (///)</option>
+          <option value="hatched-rev">Hatched (\\)</option>
+          <option value="checkered">Checkered</option>
+        </select>
+      </div>
+      <div class="action-row single">
+        <button class="action-btn" id="updateResistorBtn">Update Resistor</button>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+
+      <div class="field">
+        <label for="textValue">Textbox content</label>
+        <input id="textValue" type="text" value="Type here" />
+      </div>
+      <div class="field">
+        <label for="fontSize">Textbox font size</label>
+        <input id="fontSize" type="number" min="8" max="48" value="12" />
+      </div>
+      <div class="action-row single">
+        <button class="action-btn" id="updateTextBtn">Update Text</button>
+      </div>
+    </div>
+
+    <div class="status" id="statusBox">
+      Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br><strong>Text Tool:</strong> Click canvas to place text. Double-click any text component to edit it directly. Press <strong>Enter</strong> to save, or <strong>Shift+Enter</strong> for a new line.<br><br>Crossings count as connections. Copy and paste commands work only on arrows.<br>Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a> with contributions by Tan Seng Kwang
+    </div>
   </aside>
 
   <main class="workspace">
@@ -308,58 +360,6 @@
         <button class="tool-btn" data-tool="galvanometer">Galvanometer</button>
         <button class="tool-btn" data-tool="motor">Motor</button>
       </div>
-    </div>
-
-    <h2>Properties</h2>
-    <div class="tool-section">
-      <div class="field">
-        <label for="batteryCells">Battery cells in series</label>
-        <input id="batteryCells" type="number" min="1" max="8" value="2" />
-      </div>
-      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
-      
-      <div class="field">
-        <label for="magnetBlocks">Solenoid length (Even grids)</label>
-        <input id="magnetBlocks" type="number" min="2" max="16" step="2" value="4" />
-      </div>
-      <div class="field">
-        <label for="magnetCoils">Solenoid coils</label>
-        <input id="magnetCoils" type="number" min="1" max="25" value="5" />
-      </div>
-      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
-
-      <div class="field">
-        <label for="resistorFill">Resistor Pattern</label>
-        <select id="resistorFill">
-          <option value="white">White (Default)</option>
-          <option value="black">Black</option>
-          <option value="grey">Grey</option>
-          <option value="dotted">Dotted</option>
-          <option value="hatched">Hatched (///)</option>
-          <option value="hatched-rev">Hatched (\\\\)</option>
-          <option value="checkered">Checkered</option>
-        </select>
-      </div>
-      <div class="action-row single">
-        <button class="action-btn" id="updateResistorBtn">Update Resistor</button>
-      </div>
-      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
-
-      <div class="field">
-        <label for="textValue">Textbox content</label>
-        <input id="textValue" type="text" value="Type here" />
-      </div>
-      <div class="field">
-        <label for="fontSize">Textbox font size</label>
-        <input id="fontSize" type="number" min="8" max="48" value="12" />
-      </div>
-      <div class="action-row single">
-        <button class="action-btn" id="updateTextBtn">Update Text</button>
-      </div>
-    </div>
-
-    <div class="status" id="statusBox">
-      Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br><strong>Text Tool:</strong> Click canvas to place text. Double-click any text component to edit it directly. Press <strong>Enter</strong> to save, or <strong>Shift+Enter</strong> for a new line.<br><br>Crossings count as connections. Copy and paste commands work only on arrows.
     </div>
   </aside>
 
@@ -1570,19 +1570,25 @@
       g.appendChild(make('path', { d: 'M -9 0 C -6 -7, -3 -7, 0 0 S 6 7, 9 0', fill: 'none', stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
     }
 
+    function getFillValue(fillPattern) {
+      if (fillPattern === 'black') return '#111827';
+      if (fillPattern === 'grey') return '#9ca3af';
+      if (fillPattern === 'dotted') return 'url(#pat-dotted)';
+      if (fillPattern === 'hatched') return 'url(#pat-hatched)';
+      if (fillPattern === 'hatched-rev') return 'url(#pat-hatched-rev)';
+      if (fillPattern === 'checkered') return 'url(#pat-checkered)';
+      return 'white';
+    }
+
     function drawResistor(g, fillPattern = 'white') {
       g.appendChild(make('line', { x1: -42, y1: 0, x2: -22, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
       g.appendChild(make('line', { x1: 22, y1: 0, x2: 42, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
       
-      let fillValue = 'white';
-      if (fillPattern === 'black') fillValue = '#111827';
-      else if (fillPattern === 'grey') fillValue = '#9ca3af';
-      else if (fillPattern === 'dotted') fillValue = 'url(#pat-dotted)';
-      else if (fillPattern === 'hatched') fillValue = 'url(#pat-hatched)';
-      else if (fillPattern === 'hatched-rev') fillValue = 'url(#pat-hatched-rev)';
-      else if (fillPattern === 'checkered') fillValue = 'url(#pat-checkered)';
+      // 1. Solid white background to hide wires underneath
+      g.appendChild(make('rect', { x: -22, y: -10, width: 44, height: 20, fill: 'white', stroke: 'none' }));
 
-      g.appendChild(make('rect', { x: -22, y: -10, width: 44, height: 20, fill: fillValue, stroke: '#111827', 'stroke-width': 2.4 }));
+      // 2. Pattern and border layer
+      g.appendChild(make('rect', { x: -22, y: -10, width: 44, height: 20, fill: getFillValue(fillPattern), stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
     function drawVariableResistor(g, fillPattern) {
