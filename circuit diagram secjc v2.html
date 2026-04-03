@@ -764,6 +764,7 @@
       }
       if (comp.type === 'solenoid') {
         const blocks = comp.blocks || 2;
+        // Node connection points in unscaled world space
         const localNodes = [ { x: -22.4, y: 11.2 * blocks }, { x: 22.4, y: -11.2 * blocks } ];
         return localNodes.map(node => {
           const rotated = rotatePoint(node.x, node.y, comp.rotation || 0);
@@ -1676,12 +1677,22 @@
     }
 
     function drawSolenoid(g, blocks = 2, coils = 5) {
-      const y_bottom = 11.2 * blocks;
-      const y_top = -11.2 * blocks;
+      // Pre-scale by 14 so that after the 0.8x wrap, it resolves to exact 11.2 grid snapping
+      const y_bottom = 14 * blocks;
+      const y_top = -14 * blocks;
       const dy = (y_bottom - y_top) / coils;
 
-      g.appendChild(make('rect', { x: -14, y: y_top - 10, width: 28, height: (y_bottom - y_top) + 20, fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('rect', { 
+        x: -14, 
+        y: y_top - 10, 
+        width: 28, 
+        height: (y_bottom - y_top) + 20, 
+        fill: 'white', 
+        stroke: '#111827', 
+        'stroke-width': 2.4 
+      }));
 
+      // X offsets: -28 * 0.8 = -22.4 (exact horizontal grid lock)
       g.appendChild(make('line', { x1: -28, y1: y_bottom, x2: -14, y2: y_bottom, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
       g.appendChild(make('line', { x1: 14, y1: y_top, x2: 28, y2: y_top, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
 
