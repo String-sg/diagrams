@@ -593,7 +593,11 @@
       return 'white';
     }
     function drawResistor(g, fillPattern = 'white') {
-      g.appendChild(make('line', { x1: -44.8, y1: 0, x2: -22, y2: 0, stroke: '#111827', 'stroke-width': 2.4 })); g.appendChild(make('line', { x1: 22, y1: 0, x2: 44.8, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: -44.8, y1: 0, x2: -22, y2: 0, stroke: '#111827', 'stroke-width': 2.4 })); 
+      g.appendChild(make('line', { x1: 22, y1: 0, x2: 44.8, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
+      // White-out layer
+      g.appendChild(make('rect', { x: -22, y: -9, width: 44, height: 18, fill: 'white', stroke: 'none' }));
+      // Top layer with pattern/border
       g.appendChild(make('rect', { x: -22, y: -9, width: 44, height: 18, fill: getFillValue(fillPattern), stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
