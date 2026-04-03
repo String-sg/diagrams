@@ -82,7 +82,7 @@
       color: #4b5563;
       line-height: 1.35;
     }
-    button, input {
+    button, input, select {
       font: inherit;
     }
     .tool-btn, .action-btn {
@@ -121,12 +121,14 @@
       margin-bottom: 4px;
     }
     .field input[type="number"],
-    .field input[type="text"] {
+    .field input[type="text"],
+    .field select {
       width: 100%;
       padding: 5px 7px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: white;
+      font-size: 11px;
     }
     .status {
       margin-top: 8px;
@@ -200,7 +202,7 @@
 </head>
 <body>
   <aside class="sidebar sidebar-left">
-    <h1>Circuit Diagram Generator v2</h1>
+    <h1>Circuit Diagram Generator</h1>
 
     <h2>Tools</h2>
     <div class="tool-section">
@@ -214,35 +216,6 @@
         <button class="tool-btn" data-tool="label-line">Label Line</button>
         <button class="tool-btn" data-tool="divider-arrow">Grid Arrow</button>
         <button class="tool-btn" data-tool="textbox">Textbox</button>
-      </div>
-    </div>
-
-    <h2>Properties</h2>
-    <div class="tool-section">
-      <div class="field">
-        <label for="batteryCells">Battery cells in series</label>
-        <input id="batteryCells" type="number" min="1" max="8" value="2" />
-      </div>
-      <div class="field">
-        <label for="magnetBlocks">Solenoid length (Even grids)</label>
-        <input id="magnetBlocks" type="number" min="2" max="16" step="2" value="4" />
-      </div>
-      <div class="field">
-        <label for="magnetCoils">Solenoid coils</label>
-        <input id="magnetCoils" type="number" min="1" max="25" value="5" />
-      </div>
-      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
-      <div class="field">
-        <label for="textValue">Textbox content</label>
-        <input id="textValue" type="text" value="Type here" />
-      </div>
-      <div class="field">
-        <label for="fontSize">Textbox font size</label>
-        <input id="fontSize" type="number" min="8" max="48" value="12" />
-      </div>
-      <div class="action-row">
-        <button class="action-btn" id="addTextBtn">Add Text</button>
-        <button class="action-btn" id="updateTextBtn">Update Selected</button>
       </div>
     </div>
 
@@ -337,8 +310,56 @@
       </div>
     </div>
 
+    <h2>Properties</h2>
+    <div class="tool-section">
+      <div class="field">
+        <label for="batteryCells">Battery cells in series</label>
+        <input id="batteryCells" type="number" min="1" max="8" value="2" />
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+      
+      <div class="field">
+        <label for="magnetBlocks">Solenoid length (Even grids)</label>
+        <input id="magnetBlocks" type="number" min="2" max="16" step="2" value="4" />
+      </div>
+      <div class="field">
+        <label for="magnetCoils">Solenoid coils</label>
+        <input id="magnetCoils" type="number" min="1" max="25" value="5" />
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+
+      <div class="field">
+        <label for="resistorFill">Resistor Pattern</label>
+        <select id="resistorFill">
+          <option value="white">White (Default)</option>
+          <option value="black">Black</option>
+          <option value="grey">Grey</option>
+          <option value="dotted">Dotted</option>
+          <option value="hatched">Hatched (///)</option>
+          <option value="hatched-rev">Hatched (\\\\)</option>
+          <option value="checkered">Checkered</option>
+        </select>
+      </div>
+      <div class="action-row single">
+        <button class="action-btn" id="updateResistorBtn">Update Resistor</button>
+      </div>
+      <hr style="border: 0; border-top: 1px solid var(--border); margin: 8px 0;" />
+
+      <div class="field">
+        <label for="textValue">Textbox content</label>
+        <input id="textValue" type="text" value="Type here" />
+      </div>
+      <div class="field">
+        <label for="fontSize">Textbox font size</label>
+        <input id="fontSize" type="number" min="8" max="48" value="12" />
+      </div>
+      <div class="action-row single">
+        <button class="action-btn" id="updateTextBtn">Update Text</button>
+      </div>
+    </div>
+
     <div class="status" id="statusBox">
-      Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br><strong>Text Tool:</strong> Click canvas to place text. Double-click any text component to edit it directly. Press <strong>Enter</strong> to save, or <strong>Shift+Enter</strong> for a new line.<br><br>Crossings count as connections. Copy and paste commands work only on arrows. <BR>Vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a> with contributions by Tan Seng Kwang.
+      Use <strong>Select / Move</strong> to drag components. Use <strong>Wire</strong> to draw straight snapped segments between grid points.<br><br><strong>Text Tool:</strong> Click canvas to place text. Double-click any text component to edit it directly. Press <strong>Enter</strong> to save, or <strong>Shift+Enter</strong> for a new line.<br><br>Crossings count as connections. Copy and paste commands work only on arrows.
     </div>
   </aside>
 
@@ -382,9 +403,10 @@
       batteryCells: document.getElementById('batteryCells'),
       magnetBlocks: document.getElementById('magnetBlocks'),
       magnetCoils: document.getElementById('magnetCoils'),
+      resistorFill: document.getElementById('resistorFill'),
+      updateResistorBtn: document.getElementById('updateResistorBtn'),
       fontSize: document.getElementById('fontSize'),
       textValue: document.getElementById('textValue'),
-      addTextBtn: document.getElementById('addTextBtn'),
       updateTextBtn: document.getElementById('updateTextBtn'),
       statusBox: document.getElementById('statusBox'),
       undoBtn: document.getElementById('undoBtn'),
@@ -413,7 +435,6 @@
         render();
       } else {
         state.rotation = (state.rotation + deg) % 360;
-        setStatus(`Placement rotation set to ${state.rotation}°.`);
       }
     }
 
@@ -502,39 +523,50 @@
     ui.toolBtns.forEach(btn => btn.addEventListener('click', () => setTool(btn.dataset.tool)));
     ui.rotateBtn.addEventListener('click', () => applyRotation(90));
     ui.rotate180Btn.addEventListener('click', () => applyRotation(180));
+    
     ui.fontSize.addEventListener('input', () => {
       const comp = getSelectedComponent();
       if (comp?.type === 'textbox') {
         comp.fontSize = Math.max(8, Math.min(48, Number(ui.fontSize.value) || 12));
         resizeTextboxToFit(comp);
-        syncTextControls();
+        syncControls();
         render();
       }
     });
-    ui.addTextBtn.addEventListener('click', () => {
-      state.pendingTextPlacement = true;
-      setTool('textbox');
-      setStatus(`Click on the canvas to place the textbox...`);
-    });
+
     ui.updateTextBtn.addEventListener('click', () => {
       const comp = getSelectedComponent();
       if (!comp || comp.type !== 'textbox') {
-        setStatus('Select a textbox first, then use <strong>Update Selected</strong>.');
+        setStatus('Select a textbox first, then use <strong>Update Text</strong>.');
         return;
       }
       saveHistory();
       comp.text = (ui.textValue.value || 'Type here').trim() || 'Type here';
       comp.fontSize = Math.max(8, Math.min(48, Number(ui.fontSize.value) || 12));
       resizeTextboxToFit(comp);
-      syncTextControls();
+      syncControls();
       render();
     });
+
+    ui.updateResistorBtn.addEventListener('click', () => {
+      const comp = getSelectedComponent();
+      if (!comp || !['resistor', 'variable-resistor', 'potentiometer', 'thermistor'].includes(comp.type)) {
+        setStatus('Select a resistor-based component first, then use <strong>Update Resistor</strong>.');
+        return;
+      }
+      saveHistory();
+      comp.fillPattern = ui.resistorFill.value;
+      syncControls();
+      render();
+    });
+
     ui.toggleGridBtn.addEventListener('click', () => {
       state.showGrid = !state.showGrid;
       ui.toggleGridBtn.textContent = state.showGrid ? 'Hide Grid' : 'Show Grid';
-      syncTextControls();
+      syncControls();
       render();
     });
+    
     ui.flipPolarityBtn.addEventListener('click', () => {
       const selectedComp = getSelectedComponent();
       if (selectedComp && ['dc-supply', 'ac-supply'].includes(selectedComp.type)) {
@@ -545,8 +577,8 @@
       }
       state.polarityFlipped = !state.polarityFlipped;
       ui.flipPolarityBtn.classList.toggle('active', state.polarityFlipped);
-      setStatus(`Supply polarity flip for new AC/DC supplies is ${state.polarityFlipped ? 'on' : 'off'}.`);
     });
+    
     ui.undoBtn.addEventListener('click', undo);
     ui.redoBtn.addEventListener('click', redo);
     ui.clearBtn.addEventListener('click', () => {
@@ -557,6 +589,7 @@
       rebuildJunctions();
       render();
     });
+    
     ui.exportBtn.addEventListener('click', exportPNG);
     ui.fitBtn.addEventListener('click', centreView);
     ui.zoomInBtn.addEventListener('click', () => adjustZoom(1.2));
@@ -611,7 +644,7 @@
 
       inlineEditor.style.display = 'none';
       editingComp = null;
-      syncTextControls();
+      syncControls();
       render();
     }
 
@@ -678,6 +711,10 @@
         ui.rotateBtn.click();
       }
     });
+
+    function setStatus(html) {
+      ui.statusBox.innerHTML = html;
+    }
 
     function pointerToSvg(evt) {
       const pt = svg.createSVGPoint();
@@ -844,11 +881,13 @@
       return lines;
     }
 
-    function syncTextControls() {
+    function syncControls() {
       const comp = getSelectedComponent();
       if (comp?.type === 'textbox') {
         ui.fontSize.value = comp.fontSize || 12;
         ui.textValue.value = comp.text || 'Type here';
+      } else if (comp && ['resistor', 'variable-resistor', 'potentiometer', 'thermistor'].includes(comp.type)) {
+        if (comp.fillPattern) ui.resistorFill.value = comp.fillPattern;
       }
     }
 
@@ -868,6 +907,10 @@
         cells: type === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined,
         polarityFlipped: ['dc-supply', 'ac-supply'].includes(type) ? state.polarityFlipped : false
       };
+
+      if (['resistor', 'variable-resistor', 'potentiometer', 'thermistor'].includes(type)) {
+        comp.fillPattern = ui.resistorFill.value;
+      }
 
       if (type === 'solenoid') {
         comp.blocks = Math.max(2, Math.floor((Number(ui.magnetBlocks.value) || 2) / 2) * 2);
@@ -898,7 +941,7 @@
       state.components.push(comp);
       rebuildJunctions();
       state.selected = { kind: 'component', id: comp.id };
-      syncTextControls();
+      syncControls();
       render();
 
       if (type === 'textbox') {
@@ -1043,7 +1086,7 @@
 
       const hit = findHit(p);
       state.selected = hit;
-      syncTextControls();
+      syncControls();
       if (hit?.kind === 'component' && state.tool === 'select') {
         const comp = state.components.find(c => c.id === hit.id);
         if (comp?.type === 'arrow' || comp?.type === 'divider-arrow' || comp?.type === 'label-line') {
@@ -1240,6 +1283,23 @@
       svg.innerHTML = '';
 
       const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      
+      // Definition for our new resistor fill patterns
+      defs.innerHTML = `
+        <pattern id="pat-dotted" x="0" y="0" width="4" height="4" patternUnits="userSpaceOnUse">
+          <circle cx="2" cy="2" r="1" fill="#111827" />
+        </pattern>
+        <pattern id="pat-hatched" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <path d="M-1,1 l2,-2 M0,6 l6,-6 M5,7 l2,-2" stroke="#111827" stroke-width="1.5" />
+        </pattern>
+        <pattern id="pat-hatched-rev" x="0" y="0" width="6" height="6" patternUnits="userSpaceOnUse">
+          <path d="M5,-1 l2,2 M0,0 l6,6 M-1,5 l2,2" stroke="#111827" stroke-width="1.5" />
+        </pattern>
+        <pattern id="pat-checkered" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse">
+          <rect x="0" y="0" width="4" height="4" fill="#111827" />
+          <rect x="4" y="4" width="4" height="4" fill="#111827" />
+        </pattern>
+      `;
       svg.appendChild(defs);
 
       if (state.showGrid) drawGrid();
@@ -1330,16 +1390,19 @@
         if (inner !== scaled) scaled.appendChild(inner);
         
         if (comp.type === 'bulb') drawBulb(inner);
-        if (comp.type === 'battery') drawBattery(inner, comp.cells || 2);
+        if (comp.type === 'battery') drawBattery(inner);
         if (comp.type === 'dc-supply') drawDcSupply(inner);
         if (comp.type === 'power-supply') drawPowerSupply(inner);
         if (comp.type === 'ac-supply') drawAcSupply(inner);
         if (comp.type === 'capacitor') drawCapacitor(inner);
-        if (comp.type === 'resistor') drawResistor(inner);
-        if (comp.type === 'variable-resistor') drawVariableResistor(inner);
-        if (comp.type === 'potentiometer') drawPotentiometer(inner);
+        
+        // Push the fill pattern to the resistor components
+        if (comp.type === 'resistor') drawResistor(inner, comp.fillPattern);
+        if (comp.type === 'variable-resistor') drawVariableResistor(inner, comp.fillPattern);
+        if (comp.type === 'potentiometer') drawPotentiometer(inner, comp.fillPattern);
+        if (comp.type === 'thermistor') drawThermistor(inner, comp.fillPattern);
+        
         if (comp.type === 'bell') drawBell(inner);
-        if (comp.type === 'thermistor') drawThermistor(inner);
         if (comp.type === 'ldr') drawLdr(inner);
         if (comp.type === 'heater') drawHeater(inner);
         if (comp.type === 'magnetising-coil') drawMagnetisingCoil(inner);
@@ -1359,7 +1422,6 @@
         svg.appendChild(wrap);
       }
     }
-
 
     function drawTextbox(parent, comp) {
       const g = make('g');
@@ -1431,28 +1493,22 @@
       g.appendChild(make('line', { x1: -offset, y1: offset, x2: offset, y2: -offset, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
     }
 
-    function drawBattery(g, cells) {
-      const start = -(cells * 18) / 2;
-      const endX = start + (cells - 1) * 18 + 8; 
-      const nodeX = (34 + cells * 18) / 2; 
-
+    function drawBattery(g) {
       g.appendChild(make('line', {
-        x1: start - 2, y1: 0, x2: endX + 2, y2: 0,
+        x1: -20, y1: 0, x2: 20, y2: 0,
         stroke: 'white', 'stroke-width': 8, 'stroke-linecap': 'butt'
       }));
 
-      g.appendChild(make('line', { x1: -nodeX, y1: 0, x2: start, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
-      g.appendChild(make('line', { x1: endX, y1: 0, x2: nodeX, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: -28, y1: 0, x2: -18, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: 8, y1: 0, x2: 28, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
 
-      let x = start;
-      for (let i = 0; i < cells; i++) {
-        g.appendChild(make('line', { x1: x, y1: -15, x2: x, y2: 15, stroke: '#111827', 'stroke-width': 2.4 }));
-        g.appendChild(make('line', { x1: x + 8, y1: -9, x2: x + 8, y2: 9, stroke: '#111827', 'stroke-width': 2.4 }));
-        if (i < cells - 1) {
-          g.appendChild(make('line', { x1: x + 8, y1: 0, x2: x + 18, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
-        }
-        x += 18;
-      }
+      // Cell 1
+      g.appendChild(make('line', { x1: -18, y1: -15, x2: -18, y2: 15, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: -10, y1: -9, x2: -10, y2: 9, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: -10, y1: 0, x2: 0, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
+      // Cell 2
+      g.appendChild(make('line', { x1: 0, y1: -15, x2: 0, y2: 15, stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('line', { x1: 8, y1: -9, x2: 8, y2: 9, stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
     function drawDcSupply(g) {
@@ -1514,21 +1570,30 @@
       g.appendChild(make('path', { d: 'M -9 0 C -6 -7, -3 -7, 0 0 S 6 7, 9 0', fill: 'none', stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
     }
 
-    function drawResistor(g) {
+    function drawResistor(g, fillPattern = 'white') {
       g.appendChild(make('line', { x1: -42, y1: 0, x2: -22, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
       g.appendChild(make('line', { x1: 22, y1: 0, x2: 42, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
-      g.appendChild(make('rect', { x: -22, y: -10, width: 44, height: 20, fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
+      
+      let fillValue = 'white';
+      if (fillPattern === 'black') fillValue = '#111827';
+      else if (fillPattern === 'grey') fillValue = '#9ca3af';
+      else if (fillPattern === 'dotted') fillValue = 'url(#pat-dotted)';
+      else if (fillPattern === 'hatched') fillValue = 'url(#pat-hatched)';
+      else if (fillPattern === 'hatched-rev') fillValue = 'url(#pat-hatched-rev)';
+      else if (fillPattern === 'checkered') fillValue = 'url(#pat-checkered)';
+
+      g.appendChild(make('rect', { x: -22, y: -10, width: 44, height: 20, fill: fillValue, stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
-    function drawVariableResistor(g) {
-      drawResistor(g);
+    function drawVariableResistor(g, fillPattern) {
+      drawResistor(g, fillPattern);
       g.appendChild(make('line', { x1: -14, y1: 18, x2: 14, y2: -16, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
       g.appendChild(make('line', { x1: 14, y1: -16, x2: 22, y2: -26, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
       g.appendChild(make('polygon', { points: '22,-26 12,-24 18,-15', fill: '#111827' }));
     }
 
-    function drawPotentiometer(g) {
-      drawResistor(g);
+    function drawPotentiometer(g, fillPattern) {
+      drawResistor(g, fillPattern);
       g.appendChild(make('line', { x1: 0, y1: -29, x2: 0, y2: -10, stroke: '#111827', 'stroke-width': 2.4 }));
       g.appendChild(make('path', { d: 'M -5 -16 L 0 -10 L 5 -16 Z', fill: '#111827' }));
     }
@@ -1543,8 +1608,8 @@
       g.appendChild(make('path', { d: 'M -15 -12 A 15 15 0 0 1 15 -12 Z', fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
-    function drawThermistor(g) {
-      drawResistor(g);
+    function drawThermistor(g, fillPattern) {
+      drawResistor(g, fillPattern);
       g.appendChild(make('line', { x1: -14, y1: 18, x2: 8, y2: -18, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
       g.appendChild(make('line', { x1: -22, y1: 18, x2: -14, y2: 18, stroke: '#111827', 'stroke-width': 2.4, 'stroke-linecap': 'round' }));
     }
@@ -1553,7 +1618,7 @@
       g.appendChild(make('circle', { cx: 0, cy: 0, r: 20, fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
       g.appendChild(make('line', { x1: -42, y1: 0, x2: -14, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
       g.appendChild(make('line', { x1: 14, y1: 0, x2: 42, y2: 0, stroke: '#111827', 'stroke-width': 2.4 }));
-      g.appendChild(make('rect', { x: -14, y: -8, width: 28, height: 16, fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
+      g.appendChild(make('rect', { x: -14, y: -8, width: 28, height: 16, fill: 'none', stroke: '#111827', 'stroke-width': 2.4 }));
     }
 
     function drawHeater(g) {
@@ -1605,8 +1670,8 @@
     }
 
     function drawSolenoid(g, blocks = 2, coils = 5) {
-      const y_bottom = 14 * blocks;
-      const y_top = -14 * blocks;
+      const y_bottom = 11.2 * blocks;
+      const y_top = -11.2 * blocks;
       const dy = (y_bottom - y_top) / coils;
 
       g.appendChild(make('rect', { x: -14, y: y_top - 10, width: 28, height: (y_bottom - y_top) + 20, fill: 'white', stroke: '#111827', 'stroke-width': 2.4 }));
