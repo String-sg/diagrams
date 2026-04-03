@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev       # Start local dev server at http://localhost:3000
-npm test          # Run all Jest tests (20 tests, 3 suites)
+npm test          # Run all Jest tests (95 tests, 8 suites)
 npm run build     # Production build
 ```
 
@@ -78,9 +78,22 @@ The old suite (`circuit-diagram-suite.html`) and original companions (`circuit_d
 
 ## Tests
 
-Three suites in `__tests__/` (24 tests total):
+Eight suites in `__tests__/` (95 tests total):
+
+**API & infrastructure**
 - `api/event.test.ts` — API route: input validation, rate-limit behaviour, happy-path DB call sequence, all 5 valid tool names accepted. DB is mocked via `jest.mock('@/lib/db')`.
 - `tracker.test.js` — tracker.js: UUID lifecycle, fetch fired per export button ID, no-op when `tool-id` meta is absent. Evaluated with `eval()` in jsdom.
-- `pages/index.test.tsx` — smoke test: all 4 tool cards render with correct titles and hrefs.
 
-The metrics page and HTML canvas logic are **not unit-tested** — validate manually after changes.
+**Pages**
+- `pages/index.test.tsx` — smoke test: all 4 tool cards render with correct titles and hrefs.
+- `pages/metrics.test.tsx` — async server component: aggregate stats, per-tool rows, zero defaults, DB error state. DB mocked via `jest.mock('@/lib/db')`.
+
+**Canvas logic** (`__tests__/canvas/`)
+- `circuit-symbol.test.js` — `snap`, `gcd`, `componentSize`, `getComponentNodes` from `circuit_diagram_creatorv2.html`. GRID=28, **COMPONENT_SCALE=0.8** (all component sizes multiplied by 0.8).
+- `circuit-secjc.test.js` — same functions plus `rotatePoint` from `circuit_diagram_secjc.html`. GRID=22.4, includes transistor (3-node) and transformer (2-node) geometry.
+- `object-circuit.test.js` — `rotatePoint`, `getLocalNodes`, `getComponentNodes` from `object_circuitv2.html`. **COMPONENT_SCALE=0.8** (battery/switch nodes), **BULB_SCALE=1** (bulb nodes unscaled).
+- `water-tank.test.js` — IIFE-based script; tested via DOM events (`fireInput`/`fireChange`) and `svgWrap.innerHTML` inspection.
+
+**Canvas test pattern**: `__tests__/canvas/helpers.js` provides `loadCircuitScript` (eval-extracts functions from HTML) and `loadIifeScript` (eval-runs IIFE scripts). The helpers file is excluded from Jest test discovery via `testPathIgnorePatterns`.
+
+**Key gotcha**: `snap(-10)` returns `-0` in JavaScript (IEEE 754); use `Math.abs(snap(-10))` or `toBeCloseTo` when asserting zero.
