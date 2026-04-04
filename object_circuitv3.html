@@ -30,6 +30,34 @@
     .topbar { position: absolute; top: 6px; right: 6px; display: flex; gap: 4px; z-index: 5; }
     .topbar button { border: 1px solid var(--border); background: white; font-size: 11px; padding: 4px 7px; border-radius: 6px; cursor: pointer; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
     #inlineEditor { position: absolute; display: none; z-index: 100; background: rgba(255, 255, 255, 0.95); border: 2px dashed var(--accent); border-radius: 4px; padding: 8px; margin: 0; text-align: center; resize: none; outline: none; color: #111827; font-family: Arial, Helvetica, sans-serif; line-height: 1.25; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; white-space: pre-wrap; }
+    
+    /* Navigator / Minimap Styles */
+    .navigator-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 200px;
+      height: 133px;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 10;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    #minimap {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #minimap-viewport {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.05);
+    }
   </style>
 </head>
 <body>
@@ -89,6 +117,11 @@
     </div>
     <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
     <textarea id="inlineEditor" placeholder="Type here..."></textarea>
+    
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   </main>
 
   <aside class="sidebar right-sidebar">
@@ -149,6 +182,7 @@
       tool: 'select', rotation: 0, showGrid: true, wires: [], components: [], arrows: [], labelLines: [], texts: [],
       junctionMap: new Map(), selected: null, dragging: null, wirePreview: null, shapePreview: null,
       history: [], future: [], nextId: 1, viewport: { width: 1200, height: 800 }, zoom: 1, viewCenter: { x: 600, y: 400 },
+      world: { width: 2400, height: 1600 }
     };
 
     let editingComp = null;
@@ -167,6 +201,7 @@
       magnetBlocks: document.getElementById('magnetBlocks'), magnetCoils: document.getElementById('magnetCoils')
     };
 
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
     function saveHistory() { state.history.push(deepClone({ wires: state.wires, components: state.components, arrows: state.arrows, labelLines: state.labelLines, texts: state.texts, nextId: state.nextId, zoom: state.zoom, viewCenter: state.viewCenter })); if (state.history.length > 100) state.history.shift(); state.future = []; }
     function restoreSnapshot(snapshot) { state.wires = deepClone(snapshot.wires || []); state.components = deepClone(snapshot.components || []); state.arrows = deepClone(snapshot.arrows || []); state.labelLines = deepClone(snapshot.labelLines || []); state.texts = deepClone(snapshot.texts || []); state.nextId = snapshot.nextId; state.zoom = snapshot.zoom || 1; state.viewCenter = snapshot.viewCenter || { x: 600, y: 400 }; state.selected = null; rebuildJunctions(); syncControls(); render(); }
@@ -344,8 +379,62 @@
 
     svg.addEventListener('pointerleave', () => { if (['wire', 'arrow', 'grid-arrow', 'label-line'].includes(state.dragging?.mode)) { state.dragging = null; state.wirePreview = null; state.shapePreview = null; render(); } });
 
+    // Navigator Events
+    const navPanel = document.getElementById('navigator');
+    let isDraggingMinimap = false;
+
+    function panFromMinimap(evt) {
+      const rect = navPanel.getBoundingClientRect();
+      const clickX = clamp((evt.clientX - rect.left) / rect.width, 0, 1);
+      const clickY = clamp((evt.clientY - rect.top) / rect.height, 0, 1);
+      state.viewCenter = {
+        x: clickX * state.world.width,
+        y: clickY * state.world.height
+      };
+      render();
+    }
+
+    navPanel.addEventListener('pointerdown', (evt) => {
+      isDraggingMinimap = true;
+      panFromMinimap(evt);
+      navPanel.setPointerCapture(evt.pointerId);
+    });
+
+    navPanel.addEventListener('pointermove', (evt) => {
+      if (isDraggingMinimap) panFromMinimap(evt);
+    });
+
+    navPanel.addEventListener('pointerup', (evt) => {
+      isDraggingMinimap = false;
+      navPanel.releasePointerCapture(evt.pointerId);
+    });
+
     function centreView() { const bounds = contentBounds(); state.viewCenter = { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h / 2 }; render(); }
     function currentViewBox() { const vw = state.viewport.width / state.zoom, vh = state.viewport.height / state.zoom; return { x: state.viewCenter.x - vw / 2, y: state.viewCenter.y - vh / 2, w: vw, h: vh }; }
+
+    function updateNavigator() {
+      const nav = document.getElementById('navigator');
+      const minimap = document.getElementById('minimap');
+      const navViewport = document.getElementById('minimap-viewport');
+      
+      if (!nav || !minimap || !navViewport) return;
+
+      minimap.setAttribute('viewBox', `0 0 ${state.world.width} ${state.world.height}`);
+      minimap.innerHTML = svg.innerHTML; 
+      
+      [...minimap.querySelectorAll('line[stroke="#f0f0f0"]')].forEach(el => el.remove());
+
+      const vb = currentViewBox();
+      const leftPct = (vb.x / state.world.width) * 100;
+      const topPct = (vb.y / state.world.height) * 100;
+      const widthPct = (vb.w / state.world.width) * 100;
+      const heightPct = (vb.h / state.world.height) * 100;
+
+      navViewport.style.left = `${leftPct}%`;
+      navViewport.style.top = `${topPct}%`;
+      navViewport.style.width = `${widthPct}%`;
+      navViewport.style.height = `${heightPct}%`;
+    }
 
     function render() {
       state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth; state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight;
@@ -371,6 +460,8 @@
 
       if (state.showGrid) drawGrid(vb);
       drawWires(); drawWirePreview(); drawArrows(); drawLabelLines(); drawShapePreview(); drawComponents(); drawTexts(); setStatus(ui.statusBox.innerHTML || defaultStatus());
+      
+      updateNavigator();
     }
 
     function drawGrid(vb) {
