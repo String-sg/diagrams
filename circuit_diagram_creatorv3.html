@@ -60,6 +60,34 @@
       text-align: center; resize: none; outline: none; color: #111827; font-family: Arial, Helvetica, sans-serif;
       line-height: 1.25; box-shadow: 0 4px 12px rgba(0,0,0,0.1); overflow: hidden; white-space: pre-wrap;
     }
+    
+    /* Navigator / Minimap Styles */
+    .navigator-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 200px;
+      height: 133px; /* Aspect ratio of 2400x1600 */
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 10;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    #minimap {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #minimap-viewport {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      pointer-events: none; /* Let clicks pass through */
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.05); /* Dimming the area outside viewport */
+    }
   </style>
 </head>
 <body>
@@ -120,6 +148,11 @@
     </div>
     <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
     <textarea id="inlineEditor" placeholder="Type here..."></textarea>
+    
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   </main>
 
   <aside class="sidebar right-sidebar">
@@ -477,6 +510,35 @@
 
     svg.addEventListener('pointerleave', () => { if (['wire', 'arrow', 'label-line', 'divider-arrow'].includes(state.dragging?.mode)) { state.dragging = null; state.wirePreview = null; render(); } });
 
+    // Navigator Events
+    const navPanel = document.getElementById('navigator');
+    let isDraggingMinimap = false;
+
+    function panFromMinimap(evt) {
+      const rect = navPanel.getBoundingClientRect();
+      const clickX = clamp((evt.clientX - rect.left) / rect.width, 0, 1);
+      const clickY = clamp((evt.clientY - rect.top) / rect.height, 0, 1);
+      const targetWorldX = clickX * state.world.width;
+      const targetWorldY = clickY * state.world.height;
+      updateViewFromZoom(targetWorldX, targetWorldY);
+      render();
+    }
+
+    navPanel.addEventListener('pointerdown', (evt) => {
+      isDraggingMinimap = true;
+      panFromMinimap(evt);
+      navPanel.setPointerCapture(evt.pointerId);
+    });
+
+    navPanel.addEventListener('pointermove', (evt) => {
+      if (isDraggingMinimap) panFromMinimap(evt);
+    });
+
+    navPanel.addEventListener('pointerup', (evt) => {
+      isDraggingMinimap = false;
+      navPanel.releasePointerCapture(evt.pointerId);
+    });
+
     function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function syncZoomButton() { if (ui.zoomResetBtn) ui.zoomResetBtn.textContent = `${Math.round(state.zoom * 100)}%`; }
     function updateViewFromZoom(centerX = state.view ? state.view.x + state.view.width / 2 : state.world.width / 2, centerY = state.view ? state.view.y + state.view.height / 2 : state.world.height / 2) {
@@ -488,6 +550,31 @@
     function adjustZoom(factor) { const centerX = state.view ? state.view.x + state.view.width / 2 : state.world.width / 2, centerY = state.view ? state.view.y + state.view.height / 2 : state.world.height / 2; state.zoom = clamp(Number((state.zoom * factor).toFixed(3)), 0.5, 2.5); updateViewFromZoom(centerX, centerY); render(); }
     function resetZoom() { state.zoom = 1; updateViewFromZoom(); render(); }
     function centreView() { const bounds = contentBounds(); if (!state.wires.length && !state.components.length) { resetZoom(); return; } updateViewFromZoom(bounds.x + bounds.w / 2, bounds.y + bounds.h / 2); render(); }
+
+    function updateNavigator() {
+      const nav = document.getElementById('navigator');
+      const minimap = document.getElementById('minimap');
+      const navViewport = document.getElementById('minimap-viewport');
+      
+      if (!nav || !minimap || !navViewport) return;
+
+      minimap.setAttribute('viewBox', `0 0 ${state.world.width} ${state.world.height}`);
+      minimap.innerHTML = svg.innerHTML; 
+      
+      [...minimap.querySelectorAll('line[stroke="#f0f0f0"]')].forEach(el => el.remove());
+
+      const view = state.view || { x: 0, y: 0, width: state.viewport.width, height: state.viewport.height };
+      
+      const leftPct = (view.x / state.world.width) * 100;
+      const topPct = (view.y / state.world.height) * 100;
+      const widthPct = (view.width / state.world.width) * 100;
+      const heightPct = (view.height / state.world.height) * 100;
+
+      navViewport.style.left = `${leftPct}%`;
+      navViewport.style.top = `${topPct}%`;
+      navViewport.style.width = `${widthPct}%`;
+      navViewport.style.height = `${heightPct}%`;
+    }
 
     function render() {
       state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth; state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight;
@@ -514,6 +601,9 @@
 
       if (state.showGrid) drawGrid();
       drawWires(); drawWirePreview(); drawComponents();
+      
+      // Update Navigator at the end of every render cycle
+      updateNavigator();
     }
     
     function drawGrid() {
