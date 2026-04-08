@@ -142,6 +142,7 @@ Run with `npm test`. 20 tests across 3 suites, all passing.
 |------|-------------|
 | 2026-03-24 | Project scaffolded. Next.js + NeonDB + Tailwind. dev.md created with full architecture decisions. |
 | 2026-03-24 | Tests added: API route (8 tests), tracker.js (7 tests), index page (5 tests). All 20 passing. |
+| 2026-03-25 | Electromagnet re-integrated into both circuit tools (symbol + object). Symbol: hatched rod + stacked cell rects, coils 1–6. Object: same design, scaled up dimensions. |
 
 ---
 
@@ -151,4 +152,4 @@ Run with `npm test`. 20 tests across 3 suites, all passing.
 |----|--------|-------------|-------|
 | B001 | Fixed | Circuit suite iframe state loss on tab switch | Fixed by rendering both iframes simultaneously, toggling with CSS display:none |
 | B002 | Fixed | Electromagnet coil flat rendering (no depth) | Fixed draw order: back arches → rod (white fill) → front arches |
-| B003 | Reverted | Electromagnet integration removed from circuit tools | Symbol style did not match required exam format (hatched steel rod + stacked cell symbols). To be redesigned before re-integrating. |
+| B003 | Fixed | Electromagnet integration removed then re-added to circuit tools | First attempt (coil-wrap arches) did not match required exam format. Re-integrated with correct symbol: hatched steel rod rectangle above, N stacked rectangular cells below, horizontal wire leads at cell-stack midpoint. |
