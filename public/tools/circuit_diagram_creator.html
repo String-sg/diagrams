@@ -150,6 +150,7 @@
       <button class="tool-btn" data-tool="battery">Battery</button>
       <button class="tool-btn" data-tool="switch-open">Switch Open</button>
       <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
+      <button class="tool-btn" data-tool="electromagnet">Electromagnet</button>
       <button class="tool-btn" data-tool="delete">Delete</button>
     </div>
 
@@ -161,6 +162,10 @@
     <div class="field">
       <label for="batteryCells">Battery cells in series</label>
       <input id="batteryCells" type="number" min="1" max="8" value="2" />
+    </div>
+    <div class="field">
+      <label for="electromagnetCoils">Electromagnet coil count</label>
+      <input id="electromagnetCoils" type="number" min="1" max="6" value="2" />
     </div>
 
     <h2>Edit</h2>
@@ -217,6 +222,7 @@
       rotateBtn: document.getElementById('rotateBtn'),
       toggleGridBtn: document.getElementById('toggleGridBtn'),
       batteryCells: document.getElementById('batteryCells'),
+      electromagnetCoils: document.getElementById('electromagnetCoils'),
       statusBox: document.getElementById('statusBox'),
       undoBtn: document.getElementById('undoBtn'),
       redoBtn: document.getElementById('redoBtn'),
@@ -373,15 +379,16 @@
       return { x: snap(p.x), y: snap(p.y) };
     }
 
-    function componentSize(type, cells = 2) {
+    function componentSize(type, param = 2) {
       if (type === 'bulb') return { w: 58, h: 58 };
-      if (type === 'battery') return { w: 34 + cells * 18, h: 44 };
+      if (type === 'battery') return { w: 34 + param * 18, h: 44 };
+      if (type === 'electromagnet') return { w: 70, h: param * 16 + 32 };
       return { w: 80, h: 30 };
     }
 
     function getComponentNodes(comp) {
-      const cells = comp.cells || 2;
-      const size = componentSize(comp.type, cells);
+      const param = comp.type === 'electromagnet' ? (comp.coils || 2) : (comp.cells || 2);
+      const size = componentSize(comp.type, param);
       if (comp.rotation % 180 === 0) {
         return [
           { x: comp.x - size.w / 2, y: comp.y },
@@ -424,7 +431,8 @@
     }
 
     function getComponentBounds(comp) {
-      const size = componentSize(comp.type, comp.cells || 2);
+      const param = comp.type === 'electromagnet' ? (comp.coils || 2) : (comp.cells || 2);
+      const size = componentSize(comp.type, param);
       const rotated = comp.rotation % 180 === 0
         ? { w: size.w + 16, h: Math.max(size.h, 34) + 16 }
         : { w: Math.max(size.h, 34) + 16, h: size.w + 16 };
@@ -441,7 +449,8 @@
         y: p.y,
         rotation: state.rotation,
         variant: type,
-        cells: type === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined
+        cells: type === 'battery' ? Math.max(1, Math.min(8, Number(ui.batteryCells.value) || 2)) : undefined,
+        coils: type === 'electromagnet' ? Math.max(1, Math.min(6, Number(ui.electromagnetCoils.value) || 2)) : undefined
       };
       autoAlignComponent(comp);
       state.components.push(comp);
@@ -504,7 +513,7 @@
         return;
       }
 
-      if (['bulb', 'battery', 'switch-open', 'switch-closed'].includes(state.tool)) {
+      if (['bulb', 'battery', 'switch-open', 'switch-closed', 'electromagnet'].includes(state.tool)) {
         const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
         addComponent(type, p);
         const comp = state.components[state.components.length - 1];
@@ -644,6 +653,7 @@
         if (comp.type === 'bulb') drawBulb(wrap);
         if (comp.type === 'battery') drawBattery(wrap, comp.cells || 2);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
+        if (comp.type === 'electromagnet') drawElectromagnet(wrap, comp.coils || 2);
         svg.appendChild(wrap);
       }
     }
@@ -704,6 +714,52 @@
         'stroke-width': 3,
         'stroke-linecap': 'round'
       }));
+    }
+
+    // Electromagnet: hatched steel rod above stacked coil-cell rectangles.
+    // Wire connection points are at (±35, 0) — the horizontal centre of the coil stack.
+    function drawElectromagnet(g, coils) {
+      const ROD_W = 52, ROD_H = 12;
+      const CELL_W = 20, CELL_H = 12, CELL_GAP = 4;
+      const LEAD_X = 35; // matches w/2 = 70/2
+
+      // Coil cells — centred at y=0
+      const totalCoilH = coils * CELL_H + (coils - 1) * CELL_GAP;
+      const coilTop = -totalCoilH / 2;
+      for (let i = 0; i < coils; i++) {
+        g.appendChild(make('rect', {
+          x: -CELL_W / 2, y: coilTop + i * (CELL_H + CELL_GAP),
+          width: CELL_W, height: CELL_H,
+          fill: 'white', stroke: '#111827', 'stroke-width': 2
+        }));
+      }
+
+      // Horizontal wire leads to connection points at (±LEAD_X, 0)
+      g.appendChild(make('line', { x1: -LEAD_X, y1: 0, x2: -CELL_W / 2, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
+      g.appendChild(make('line', { x1:  CELL_W / 2, y1: 0, x2:  LEAD_X, y2: 0, stroke: '#111827', 'stroke-width': 2.5 }));
+
+      // Steel rod above the coil cells
+      const rodBottomY = coilTop - CELL_GAP;
+      const rodTopY    = rodBottomY - ROD_H;
+
+      // White background for the rod
+      g.appendChild(make('rect', { x: -ROD_W / 2, y: rodTopY, width: ROD_W, height: ROD_H, fill: 'white', stroke: 'none' }));
+
+      // 45° hatching lines, manually clipped to rod bounds
+      for (let offset = -ROD_H; offset < ROD_W + ROD_H; offset += 7) {
+        const x0 = -ROD_W / 2 + offset, x1 = x0 + ROD_H;
+        const xs = Math.max(-ROD_W / 2, x0), xe = Math.min(ROD_W / 2, x1);
+        if (xs < xe) {
+          g.appendChild(make('line', {
+            x1: xs, y1: rodTopY + (xs - x0),
+            x2: xe, y2: rodTopY + (xe - x0),
+            stroke: '#111827', 'stroke-width': 1.2
+          }));
+        }
+      }
+
+      // Rod border drawn last so it sits on top of the hatching
+      g.appendChild(make('rect', { x: -ROD_W / 2, y: rodTopY, width: ROD_W, height: ROD_H, fill: 'none', stroke: '#111827', 'stroke-width': 2 }));
     }
 
     function make(tag, attrs = {}) {

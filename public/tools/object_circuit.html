@@ -138,7 +138,13 @@
       <button class="tool-btn" data-tool="battery">Battery</button>
       <button class="tool-btn" data-tool="switch-open">Switch Open</button>
       <button class="tool-btn" data-tool="switch-closed">Switch Closed</button>
+      <button class="tool-btn" data-tool="electromagnet">Electromagnet</button>
       <button class="tool-btn" data-tool="delete">Delete</button>
+    </div>
+
+    <div class="field" id="coilsField" style="display:none">
+      <label for="electromagnetCoils">Coils (1–6)</label>
+      <input id="electromagnetCoils" type="number" min="1" max="6" value="2" />
     </div>
 
     <h2>Placement</h2>
@@ -207,7 +213,9 @@
       redoBtn: document.getElementById('redoBtn'),
       clearBtn: document.getElementById('clearBtn'),
       exportBtn: document.getElementById('exportBtn'),
-      fitBtn: document.getElementById('fitBtn')
+      fitBtn: document.getElementById('fitBtn'),
+      electromagnetCoils: document.getElementById('electromagnetCoils'),
+      coilsField: document.getElementById('coilsField')
     };
 
     function deepClone(obj) {
@@ -286,6 +294,7 @@
       state.tool = tool;
       state.selected = null;
       ui.toolBtns.forEach(btn => btn.classList.toggle('active', btn.dataset.tool === tool));
+      ui.coilsField.style.display = tool === 'electromagnet' ? 'block' : 'none';
       render();
     }
 
@@ -375,9 +384,10 @@
       return { x: snap(p.x), y: snap(p.y) };
     }
 
-    function componentSize(type) {
+    function componentSize(type, param) {
       if (type === 'bulb') return { w: 92, h: 92 };
       if (type === 'battery') return { w: 52, h: 92 };
+      if (type === 'electromagnet') return { w: 110, h: (param || 2) * 26 + 38 };
       return { w: 80, h: 30 };
     }
 
@@ -421,6 +431,12 @@
           { x: 40, y: 0 }
         ];
       }
+      if (comp.type === 'electromagnet') {
+        return [
+          { x: -55, y: 0 },
+          { x: 55, y: 0 }
+        ];
+      }
       return [];
     }
 
@@ -444,7 +460,8 @@
     }
 
     function getComponentBounds(comp) {
-      const size = componentSize(comp.type);
+      const param = comp.type === 'electromagnet' ? (comp.coils || 2) : undefined;
+      const size = componentSize(comp.type, param);
       const rotated = comp.rotation % 180 === 0
         ? { w: size.w + 20, h: size.h + 20 }
         : { w: size.h + 20, h: size.w + 20 };
@@ -477,7 +494,8 @@
         x: p.x,
         y: p.y,
         rotation: state.rotation,
-        variant: type
+        variant: type,
+        ...(type === 'electromagnet' && { coils: Math.max(1, Math.min(6, parseInt(ui.electromagnetCoils.value) || 2)) })
       };
       autoAlignComponent(comp);
       state.components.push(comp);
@@ -550,7 +568,7 @@
         return;
       }
 
-      if (['bulb', 'battery', 'switch-open', 'switch-closed'].includes(state.tool)) {
+      if (['bulb', 'battery', 'switch-open', 'switch-closed', 'electromagnet'].includes(state.tool)) {
         const type = state.tool.startsWith('switch') ? 'switch' : state.tool;
         addComponent(type, p);
         const comp = state.components[state.components.length - 1];
@@ -681,6 +699,7 @@
         if (comp.type === 'bulb') drawBulbObject(wrap);
         if (comp.type === 'battery') drawBatteryObject(wrap);
         if (comp.type === 'switch') drawSwitch(wrap, comp.variant === 'switch-closed');
+        if (comp.type === 'electromagnet') drawElectromagnetObject(wrap, comp.coils || 2);
         svg.appendChild(wrap);
       }
     }
@@ -727,6 +746,33 @@
         x1: -12, y1: 0, x2: 12, y2: closed ? 0 : -12,
         stroke: '#111827', 'stroke-width': 3, 'stroke-linecap': 'round'
       }));
+    }
+
+    function drawElectromagnetObject(g, coils) {
+      const ROD_W = 80, ROD_H = 18;
+      const CELL_W = 32, CELL_H = 20, CELL_GAP = 6;
+      const LEAD_X = 55;
+      const totalCoilH = coils * CELL_H + (coils - 1) * CELL_GAP;
+      const coilTop = -totalCoilH / 2;
+      for (let i = 0; i < coils; i++) {
+        g.appendChild(make('rect', {
+          x: -CELL_W / 2, y: coilTop + i * (CELL_H + CELL_GAP),
+          width: CELL_W, height: CELL_H, fill: 'white', stroke: '#111827', 'stroke-width': 2.5
+        }));
+      }
+      g.appendChild(make('line', { x1: -LEAD_X, y1: 0, x2: -CELL_W/2, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
+      g.appendChild(make('line', { x1: CELL_W/2, y1: 0, x2: LEAD_X, y2: 0, stroke: '#111827', 'stroke-width': 3 }));
+      const rodBottomY = coilTop - CELL_GAP;
+      const rodTopY = rodBottomY - ROD_H;
+      g.appendChild(make('rect', { x: -ROD_W/2, y: rodTopY, width: ROD_W, height: ROD_H, fill: 'white', stroke: 'none' }));
+      for (let offset = -ROD_H; offset < ROD_W + ROD_H; offset += 9) {
+        const x0 = -ROD_W/2 + offset, x1 = x0 + ROD_H;
+        const xs = Math.max(-ROD_W/2, x0), xe = Math.min(ROD_W/2, x1);
+        if (xs < xe) {
+          g.appendChild(make('line', { x1: xs, y1: rodTopY+(xs-x0), x2: xe, y2: rodTopY+(xe-x0), stroke: '#111827', 'stroke-width': 1.5 }));
+        }
+      }
+      g.appendChild(make('rect', { x: -ROD_W/2, y: rodTopY, width: ROD_W, height: ROD_H, fill: 'none', stroke: '#111827', 'stroke-width': 2.5 }));
     }
 
     function make(tag, attrs = {}) {
