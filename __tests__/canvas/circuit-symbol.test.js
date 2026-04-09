@@ -35,6 +35,10 @@ beforeAll(() => {
     <button id="zoomInBtn">+</button>
     <button id="zoomOutBtn">−</button>
     <button id="zoomResetBtn">100%</button>
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   `;
   ({ snap, gcd, componentSize, getComponentNodes, GRID } = loadCircuitScript(
     'circuit_diagram_creatorv2.html',

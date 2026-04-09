@@ -136,6 +136,33 @@
       background: #e5e7eb;
       font-size: 9px;
     }
+    /* Navigator / Minimap Styles */
+    .navigator-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 200px;
+      height: 133px; /* Aspect ratio of 2400x1600 */
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 10;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    #minimap {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #minimap-viewport {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.05);
+    }
   </style>
   <meta name="tool-id" content="circuit-symbol" />
 </head>
@@ -214,6 +241,11 @@
       <button id="fitBtn">Centre View</button>
     </div>
     <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   </main>
 
     <script>
@@ -648,6 +680,35 @@
       }
     });
 
+    // --- NAVIGATOR EVENTS ---
+    const navPanel = document.getElementById('navigator');
+    let isDraggingMinimap = false;
+
+    function panFromMinimap(evt) {
+      const rect = navPanel.getBoundingClientRect();
+      const clickX = clamp((evt.clientX - rect.left) / rect.width, 0, 1);
+      const clickY = clamp((evt.clientY - rect.top) / rect.height, 0, 1);
+      const targetWorldX = clickX * state.world.width;
+      const targetWorldY = clickY * state.world.height;
+      updateViewFromZoom(targetWorldX, targetWorldY);
+      render();
+    }
+
+    navPanel.addEventListener('pointerdown', (evt) => {
+      isDraggingMinimap = true;
+      panFromMinimap(evt);
+      navPanel.setPointerCapture(evt.pointerId);
+    });
+
+    navPanel.addEventListener('pointermove', (evt) => {
+      if (isDraggingMinimap) panFromMinimap(evt);
+    });
+
+    navPanel.addEventListener('pointerup', (evt) => {
+      isDraggingMinimap = false;
+      navPanel.releasePointerCapture(evt.pointerId);
+    });
+
     function clamp(value, min, max) {
       return Math.max(min, Math.min(max, value));
     }
@@ -691,6 +752,31 @@
       render();
     }
 
+    function updateNavigator() {
+      const nav = document.getElementById('navigator');
+      const minimap = document.getElementById('minimap');
+      const navViewport = document.getElementById('minimap-viewport');
+
+      if (!nav || !minimap || !navViewport) return;
+
+      minimap.setAttribute('viewBox', `0 0 ${state.world.width} ${state.world.height}`);
+      minimap.innerHTML = svg.innerHTML;
+
+      [...minimap.querySelectorAll('line[stroke="#f0f0f0"]')].forEach(el => el.remove());
+
+      const view = state.view || { x: 0, y: 0, width: state.viewport.width, height: state.viewport.height };
+
+      const leftPct = (view.x / state.world.width) * 100;
+      const topPct = (view.y / state.world.height) * 100;
+      const widthPct = (view.width / state.world.width) * 100;
+      const heightPct = (view.height / state.world.height) * 100;
+
+      navViewport.style.left = `${leftPct}%`;
+      navViewport.style.top = `${topPct}%`;
+      navViewport.style.width = `${widthPct}%`;
+      navViewport.style.height = `${heightPct}%`;
+    }
+
     function render() {
       state.viewport.width = svg.clientWidth || svg.parentElement.clientWidth;
       state.viewport.height = svg.clientHeight || svg.parentElement.clientHeight;
@@ -702,6 +788,9 @@
       drawWirePreview();
       drawComponents();
       drawJunctions();
+
+      // Update navigator minimap at end of render
+      updateNavigator();
     }
     function drawGrid() {
       const g = make('g', { opacity: 1 });

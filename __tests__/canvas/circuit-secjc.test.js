@@ -6,7 +6,7 @@
  */
 const { loadCircuitScript } = require('./helpers')
 
-let snap, gcd, componentSize, getComponentNodes, rotatePoint, GRID
+let snap, gcd, componentSize, getComponentNodes, rotatePoint, GRID, clamp, updateNavigator
 
 beforeAll(() => {
   document.body.innerHTML = `
@@ -40,10 +40,14 @@ beforeAll(() => {
     <button id="zoomInBtn">+</button>
     <button id="zoomOutBtn">−</button>
     <button id="zoomResetBtn">100%</button>
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   `;
-  ({ snap, gcd, componentSize, getComponentNodes, rotatePoint, GRID } = loadCircuitScript(
+  ({ snap, gcd, componentSize, getComponentNodes, rotatePoint, GRID, clamp, updateNavigator } = loadCircuitScript(
     'circuit_diagram_secjc.html',
-    ['snap', 'gcd', 'componentSize', 'getComponentNodes', 'rotatePoint', 'GRID']
+    ['snap', 'gcd', 'componentSize', 'getComponentNodes', 'rotatePoint', 'GRID', 'clamp', 'updateNavigator']
   ))
 })
 
@@ -146,5 +150,22 @@ describe('getComponentNodes() — standard component', () => {
   it('returns empty array for arrow-type tools', () => {
     const comp = { type: 'arrow', x: 100, y: 100, rotation: 0 }
     expect(getComponentNodes(comp)).toEqual([])
+  })
+})
+
+describe('clamp()', () => {
+  it('returns value when within range', () => expect(clamp(5, 0, 10)).toBe(5))
+  it('clamps to min when below', () => expect(clamp(-1, 0, 10)).toBe(0))
+  it('clamps to max when above', () => expect(clamp(15, 0, 10)).toBe(10))
+  it('returns min when min === max', () => expect(clamp(5, 3, 3)).toBe(3))
+})
+
+describe('updateNavigator()', () => {
+  it('is a function', () => expect(typeof updateNavigator).toBe('function'))
+  it('does not throw when called', () => expect(() => updateNavigator()).not.toThrow())
+  it('sets minimap viewBox', () => {
+    updateNavigator()
+    const minimap = document.getElementById('minimap')
+    expect(minimap.getAttribute('viewBox')).toMatch(/^0 0 \d+ \d+$/)
   })
 })
