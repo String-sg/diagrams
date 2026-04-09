@@ -172,7 +172,7 @@ Automate detection, notification, and issue creation whenever JulesWyrm pushes, 
 - If yes, call Beeper API to send a push notification to Kahhow
 
 **Job 2 — Auto-issue (runs only on JulesWyrm pushes)**
-- Generate a diff of her changes (`git diff HEAD~1..HEAD`)
+- Generate a diff of her changes using the full push range (`${before}..${after}`), not just the last commit; if `before` is all zeros (new branch), handle that case separately so the diff still covers everything introduced by the push
 - Send the diff to Claude API (Anthropic) with a structured prompt that checks for:
   - New HTML files in `public/tools/` → needs a Next.js page + `tool-id` added to `VALID_TOOLS`
   - Missing `<meta name="tool-id">` or `<script src="/tracker.js">` in any HTML file
