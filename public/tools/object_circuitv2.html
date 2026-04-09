@@ -129,6 +129,33 @@
       background: #e5e7eb;
       font-size: 9px;
     }
+    /* Navigator / Minimap Styles */
+    .navigator-panel {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      width: 200px;
+      height: 133px;
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      z-index: 10;
+      overflow: hidden;
+      cursor: crosshair;
+    }
+    #minimap {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    #minimap-viewport {
+      position: absolute;
+      border: 2px solid var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+      pointer-events: none;
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.05);
+    }
   </style>
   <meta name="tool-id" content="circuit-object" />
 </head>
@@ -207,6 +234,11 @@
     </div>
 
     <svg id="app" xmlns="http://www.w3.org/2000/svg"></svg>
+
+    <div id="navigator" class="navigator-panel">
+      <svg id="minimap" xmlns="http://www.w3.org/2000/svg"></svg>
+      <div id="minimap-viewport"></div>
+    </div>
   </main>
 
   
@@ -239,6 +271,7 @@
       viewport: { width: 1200, height: 800 },
       zoom: 1,
       viewCenter: { x: 600, y: 400 },
+      world: { width: 2400, height: 1600 }
     };
 
     const ui = {
@@ -261,6 +294,7 @@
       updateTextBtn: document.getElementById('updateTextBtn')
     };
 
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
     function deepClone(obj) {
       return JSON.parse(JSON.stringify(obj));
     }
@@ -846,6 +880,36 @@
       }
     });
 
+    // --- NAVIGATOR EVENTS ---
+    const navPanel = document.getElementById('navigator');
+    let isDraggingMinimap = false;
+
+    function panFromMinimap(evt) {
+      const rect = navPanel.getBoundingClientRect();
+      const clickX = clamp((evt.clientX - rect.left) / rect.width, 0, 1);
+      const clickY = clamp((evt.clientY - rect.top) / rect.height, 0, 1);
+      state.viewCenter = {
+        x: clickX * state.world.width,
+        y: clickY * state.world.height
+      };
+      render();
+    }
+
+    navPanel.addEventListener('pointerdown', (evt) => {
+      isDraggingMinimap = true;
+      panFromMinimap(evt);
+      navPanel.setPointerCapture(evt.pointerId);
+    });
+
+    navPanel.addEventListener('pointermove', (evt) => {
+      if (isDraggingMinimap) panFromMinimap(evt);
+    });
+
+    navPanel.addEventListener('pointerup', (evt) => {
+      isDraggingMinimap = false;
+      navPanel.releasePointerCapture(evt.pointerId);
+    });
+
     function centreView() {
       const bounds = contentBounds();
       state.viewCenter = { x: bounds.x + bounds.w / 2, y: bounds.y + bounds.h / 2 };
@@ -858,6 +922,30 @@
       let x = state.viewCenter.x - vw / 2;
       let y = state.viewCenter.y - vh / 2;
       return { x, y, w: vw, h: vh };
+    }
+
+    function updateNavigator() {
+      const nav = document.getElementById('navigator');
+      const minimap = document.getElementById('minimap');
+      const navViewport = document.getElementById('minimap-viewport');
+
+      if (!nav || !minimap || !navViewport) return;
+
+      minimap.setAttribute('viewBox', `0 0 ${state.world.width} ${state.world.height}`);
+      minimap.innerHTML = svg.innerHTML;
+
+      [...minimap.querySelectorAll('line[stroke="#f0f0f0"]')].forEach(el => el.remove());
+
+      const vb = currentViewBox();
+      const leftPct = (vb.x / state.world.width) * 100;
+      const topPct = (vb.y / state.world.height) * 100;
+      const widthPct = (vb.w / state.world.width) * 100;
+      const heightPct = (vb.h / state.world.height) * 100;
+
+      navViewport.style.left = `${leftPct}%`;
+      navViewport.style.top = `${topPct}%`;
+      navViewport.style.width = `${widthPct}%`;
+      navViewport.style.height = `${heightPct}%`;
     }
 
     function render() {
@@ -875,6 +963,9 @@
       drawComponents();
       drawTexts();
       setStatus(ui.statusBox.innerHTML || defaultStatus());
+
+      // Update navigator minimap at end of render
+      updateNavigator();
     }
 
     function drawGrid(vb) {
