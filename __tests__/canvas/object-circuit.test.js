@@ -29,6 +29,11 @@ beforeAll(() => {
     <button id="redoBtn">Redo</button>
     <button id="clearBtn">Clear All</button>
     <button id="exportBtn">Export PNG</button>
+    <input id="inlineEditor" type="text" />
+    <select id="resistorFill"><option value="white">White</option></select>
+    <button id="updateResistorBtn">Update</button>
+    <input id="magnetBlocks" type="number" value="4" />
+    <input id="magnetCoils" type="number" value="5" />
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
     <button id="zoomInBtn">+</button>
@@ -40,7 +45,7 @@ beforeAll(() => {
     </div>
   `;
   ({ rotatePoint, getLocalNodes, getComponentNodes } = loadCircuitScript(
-    'object_circuitv2.html',
+    'object_circuitv3.html',
     ['rotatePoint', 'getLocalNodes', 'getComponentNodes']
   ))
 })
@@ -79,11 +84,11 @@ describe('getLocalNodes()', () => {
   it('battery has 2 connection points (top and bottom terminals)', () => {
     const nodes = getLocalNodes({ type: 'battery' })
     expect(nodes).toHaveLength(2)
-    // COMPONENT_SCALE=0.8 applied: 46 * 0.8 = 36.8
+    // v3: hardcoded battery nodes at ±28
     expect(nodes[0].x).toBeCloseTo(0)
-    expect(nodes[0].y).toBeCloseTo(-36.8)
+    expect(nodes[0].y).toBeCloseTo(-28)
     expect(nodes[1].x).toBeCloseTo(0)
-    expect(nodes[1].y).toBeCloseTo(36.8)
+    expect(nodes[1].y).toBeCloseTo(28)
   })
 
   it('switch has 2 connection points', () => {
@@ -105,21 +110,21 @@ describe('getComponentNodes()', () => {
   it('battery at (100,100) rotation 0° → top/bottom world positions', () => {
     const comp = { type: 'battery', x: 100, y: 100, rotation: 0 }
     const nodes = getComponentNodes(comp)
-    // local y = ±36.8 (46 * 0.8)
+    // local y = ±28
     expect(nodes[0].x).toBeCloseTo(100)
-    expect(nodes[0].y).toBeCloseTo(63.2)
+    expect(nodes[0].y).toBeCloseTo(72)
     expect(nodes[1].x).toBeCloseTo(100)
-    expect(nodes[1].y).toBeCloseTo(136.8)
+    expect(nodes[1].y).toBeCloseTo(128)
   })
 
   it('battery at (100,100) rotation 90° → left/right world positions', () => {
     const comp = { type: 'battery', x: 100, y: 100, rotation: 90 }
     const nodes = getComponentNodes(comp)
-    // rotatePoint(0, -36.8, 90) → (36.8, 0)
-    expect(nodes[0].x).toBeCloseTo(136.8)
+    // rotatePoint(0, -28, 90) → (28, 0)
+    expect(nodes[0].x).toBeCloseTo(128)
     expect(nodes[0].y).toBeCloseTo(100)
-    // rotatePoint(0, 36.8, 90) → (-36.8, 0)
-    expect(nodes[1].x).toBeCloseTo(63.2)
+    // rotatePoint(0, 28, 90) → (-28, 0)
+    expect(nodes[1].x).toBeCloseTo(72)
     expect(nodes[1].y).toBeCloseTo(100)
   })
 

@@ -30,6 +30,11 @@ beforeAll(() => {
     <button id="redoBtn">Redo</button>
     <button id="clearBtn">Clear</button>
     <button id="exportBtn">Export PNG</button>
+    <input id="inlineEditor" type="text" />
+    <select id="resistorFill"><option value="white">White</option></select>
+    <button id="updateResistorBtn">Update</button>
+    <input id="magnetBlocks" type="number" value="2" />
+    <input id="magnetCoils" type="number" value="5" />
     <div id="statusBox"></div>
     <button id="fitBtn">Centre View</button>
     <button id="zoomInBtn">+</button>
@@ -41,7 +46,7 @@ beforeAll(() => {
     </div>
   `;
   ({ snap, gcd, componentSize, getComponentNodes, GRID } = loadCircuitScript(
-    'circuit_diagram_creatorv2.html',
+    'circuit_diagram_creatorv3.html',
     ['snap', 'gcd', 'componentSize', 'getComponentNodes', 'GRID']
   ))
 })

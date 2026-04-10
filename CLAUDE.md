@@ -54,12 +54,12 @@ New tools added to `public/tools/` also need a new `tool-id` added to `VALID_TOO
 
 ### Tool pages
 
-- **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that iframes `circuit_diagram_creatorv2.html` (symbol) or `object_circuitv2.html` (object). Toggle lives in the suite HTML. Switching modes loses canvas state.
-- **`/tools/circuits-secjc`** — wraps `circuit_diagram_secjc.html`. 3-column layout with extended components (transistor, transformer, potentiometer, LED, etc.).
+- **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that iframes `circuit_diagram_creatorv3.html` (symbol) or `object_circuitv3.html` (object). Toggle lives in the suite HTML. Switching modes loses canvas state.
+- **`/tools/circuits-secjc`** — wraps `circuit_diagram_secjcv2.html`. 3-column layout with extended components (transistor, transformer, potentiometer, solenoid, LED, etc.).
 - **`/tools/water-tank`** — wraps `water_tank_generator.html`. Depends on `tap.png` being co-located in `public/tools/`.
 - **`/tools/isometric-cube`** — wraps `isometric_cube.html`.
 
-The old suite (`circuit-diagram-suite.html`) and original companions (`circuit_diagram_creator.html`, `object_circuit.html`) remain at the repo root as reference; the deployed versions in `public/tools/` are the `v2` copies.
+The old suite (`circuit-diagram-suite.html`) and earlier versions remain at the repo root as reference; the deployed versions in `public/tools/` are the `v3` copies (and `secjcv2`).
 
 ### Metrics system
 
@@ -89,9 +89,9 @@ Eight suites in `__tests__/` (95 tests total):
 - `pages/metrics.test.tsx` — async server component: aggregate stats, per-tool rows, zero defaults, DB error state. DB mocked via `jest.mock('@/lib/db')`.
 
 **Canvas logic** (`__tests__/canvas/`)
-- `circuit-symbol.test.js` — `snap`, `gcd`, `componentSize`, `getComponentNodes` from `circuit_diagram_creatorv2.html`. GRID=28, **COMPONENT_SCALE=0.8** (all component sizes multiplied by 0.8).
-- `circuit-secjc.test.js` — same functions plus `rotatePoint` from `circuit_diagram_secjc.html`. GRID=22.4, includes transistor (3-node) and transformer (2-node) geometry.
-- `object-circuit.test.js` — `rotatePoint`, `getLocalNodes`, `getComponentNodes` from `object_circuitv2.html`. **COMPONENT_SCALE=0.8** (battery/switch nodes), **BULB_SCALE=1** (bulb nodes unscaled).
+- `circuit-symbol.test.js` — `snap`, `gcd`, `componentSize`, `getComponentNodes` from `circuit_diagram_creatorv3.html`. GRID=28, **COMPONENT_SCALE=0.8** (all component sizes multiplied by 0.8).
+- `circuit-secjc.test.js` — same functions plus `rotatePoint` from `circuit_diagram_secjcv2.html`. GRID=22.4, includes transistor (3-node) and transformer (2-node) geometry.
+- `object-circuit.test.js` — `rotatePoint`, `getLocalNodes`, `getComponentNodes` from `object_circuitv3.html`. **COMPONENT_SCALE=0.8** (battery/switch nodes), **BULB_SCALE=1** (bulb nodes unscaled).
 - `water-tank.test.js` — IIFE-based script; tested via DOM events (`fireInput`/`fireChange`) and `svgWrap.innerHTML` inspection.
 
 **Canvas test pattern**: `__tests__/canvas/helpers.js` provides `loadCircuitScript` (eval-extracts functions from HTML) and `loadIifeScript` (eval-runs IIFE scripts). The helpers file is excluded from Jest test discovery via `testPathIgnorePatterns`.
