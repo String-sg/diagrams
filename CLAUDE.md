@@ -54,7 +54,7 @@ New tools added to `public/tools/` also need a new `tool-id` added to `VALID_TOO
 
 ### Tool pages
 
-- **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that iframes `circuit_diagram_creatorv3.html` (symbol) or `object_circuitv3.html` (object). Toggle lives in the suite HTML. Switching modes loses canvas state.
+- **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that hosts both `circuit_diagram_creatorv3.html` (symbol) and `object_circuitv3.html` (object) in iframes. The toggle lives in the suite HTML and switches views by changing CSS visibility, so both iframes remain mounted and canvas state is preserved per view.
 - **`/tools/circuits-secjc`** — wraps `circuit_diagram_secjcv2.html`. 3-column layout with extended components (transistor, transformer, potentiometer, solenoid, LED, etc.).
 - **`/tools/water-tank`** — wraps `water_tank_generator.html`. Depends on `tap.png` being co-located in `public/tools/`.
 - **`/tools/isometric-cube`** — wraps `isometric_cube.html`.
