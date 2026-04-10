@@ -10,7 +10,7 @@ export default function CircuitsSecJCPage() {
       </header>
       <div className="relative flex-1">
         <iframe
-          src="/tools/circuit_diagram_secjc.html"
+          src="/tools/circuit_diagram_secjcv2.html"
           className="absolute inset-0 w-full h-full border-0"
           title="Circuit Diagram Generator (Sec/JC)"
         />
