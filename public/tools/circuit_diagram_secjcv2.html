@@ -1128,14 +1128,16 @@
             mode: 'move-arrow',
             id: comp.id,
             lastX: p.x,
-            lastY: p.y
+            lastY: p.y,
+            moved: false
           };
         } else {
           state.dragging = {
             mode: 'move-component',
             id: comp.id,
             offsetX: comp.x - (comp.type === 'textbox' ? p.x : snapped.x),
-            offsetY: comp.y - (comp.type === 'textbox' ? p.y : snapped.y)
+            offsetY: comp.y - (comp.type === 'textbox' ? p.y : snapped.y),
+            moved: false
           };
         }
       }
@@ -1169,6 +1171,7 @@
       if (state.dragging.mode === 'move-component') {
         const comp = state.components.find(c => c.id === state.dragging.id);
         if (!comp) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
         if (comp.type === 'textbox') {
           comp.x = p.x + state.dragging.offsetX;
           comp.y = p.y + state.dragging.offsetY;
@@ -1183,6 +1186,7 @@
       if (state.dragging.mode === 'move-arrow') {
         const comp = state.components.find(c => c.id === state.dragging.id);
         if (!comp) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
         let dx = p.x - state.dragging.lastX;
         let dy = p.y - state.dragging.lastY;
         if (comp.type === 'divider-arrow') {
@@ -1227,9 +1231,6 @@
       }
       if (state.dragging.mode === 'move-component' || state.dragging.mode === 'move-arrow') {
         if (state.dragging.mode === 'move-component') rebuildJunctions();
-        saveHistory();
-        const snapshot = state.history.pop();
-        state.history.push(snapshot);
       }
       state.dragging = null;
       render();
