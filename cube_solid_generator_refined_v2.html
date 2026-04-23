@@ -337,6 +337,8 @@
           <button id="toggleGuidesBtn" class="secondary">Hide Guides</button>
         </div>
 
+        <button id="toggleFrontSideBtn" class="secondary">Front/Side Mapping: Standard</button>
+
         <div class="row">
           <button id="toggleWallsBtn" class="secondary">Hide Walls</button>
           <button id="toggleDotsBtn" class="secondary">Hide Dotted Grid</button>
@@ -347,6 +349,9 @@
           <div class="row" style="margin-top:8px;">
             <button id="toggleExportDotsBtn" class="secondary">Export Dots: On</button>
             <button id="toggleExportWallsBtn" class="secondary">Export Walls: On</button>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button id="toggleExportDirectionLabelsBtn" class="secondary">Export Front/Side Labels: On</button>
           </div>
         </div>
 
@@ -366,7 +371,7 @@
               <li>Top highlights add a cube on top of a stack; other highlights add a grounded neighbouring cube.</li>
 	<li>Dots and walls are loaded by default for both the display and export preview. Toggle them if you want a cleaner output.</li>
 <li>Hide guides to view only the solid.</li>
-	<li>Views preview/export shows Top, Front and Side.</li>
+	<li>Views preview/export shows Top, Front and Side. You can swap the Front/Side mapping with the toggle above.</li>
               <li>Floating cubes are not allowed in this builder.</li>\n\t<li>Random solids are now generated as a solid terraced footprint, so they do not create holes between columns.</li>
               <li>Wall guides are anchored to the far back bottom corner of the solid.</li>
 	<li>Starting random solids now try to avoid hidden cubes from the default isometric viewpoint.</li>
@@ -405,9 +410,11 @@
     const toggleWallsBtn = document.getElementById('toggleWallsBtn');
     const previewExportsBtn = document.getElementById('previewExportsBtn');
     const toggleGuidesBtn = document.getElementById('toggleGuidesBtn');
+    const toggleFrontSideBtn = document.getElementById('toggleFrontSideBtn');
     const toggleDotsBtn = document.getElementById('toggleDotsBtn');
     const toggleExportDotsBtn = document.getElementById('toggleExportDotsBtn');
     const toggleExportWallsBtn = document.getElementById('toggleExportWallsBtn');
+    const toggleExportDirectionLabelsBtn = document.getElementById('toggleExportDirectionLabelsBtn');
     const shapeTag = document.getElementById('shapeTag');
     const hoverHint = document.getElementById('hoverHint');
     const cursorLabel = document.getElementById('cursorLabel');
@@ -433,6 +440,8 @@
       exportDots: true,
       showWalls: true,
       exportWalls: true,
+      exportDirectionLabels: true,
+      swapFrontSide: false,
       randomCounter: 0,
       hoveredTarget: null
     };
@@ -827,24 +836,78 @@
       return edges;
     }
 
-    function drawWallGuides(ctx2, width, height, params) {
+    function getGuideGeometry(params) {
       const { bounds, scale, ox, oy } = params;
-
-      // Anchor the trihedral reference lines at the bottom-most cube corner that is
-      // farthest from the viewer: the back-left-bottom lattice point of the solid.
-      // Then extend the three rays so they reach just beyond the solid's extents in
-      // the top, front, and side directions.
       const anchor = isoProject(bounds.minX, bounds.minY, 0, scale, ox, oy);
       const corner = { x: anchor.x, y: anchor.y + scale * 0.55 };
 
       const verticalLen = (bounds.maxH + 1.1) * scale * 1.1;
-      // extend slightly beyond solid (~1 extra cube length for visibility)
       const frontLen = (bounds.maxX - bounds.minX + 2.15) * scale;
       const sideLen = (bounds.maxY - bounds.minY + 2.15) * scale;
 
-      const up = { x: corner.x, y: corner.y - verticalLen };
-      const downLeft = { x: corner.x - sideLen, y: corner.y + sideLen * 0.55 };
-      const downRight = { x: corner.x + frontLen, y: corner.y + frontLen * 0.55 };
+      return {
+        corner,
+        up: { x: corner.x, y: corner.y - verticalLen },
+        downLeft: { x: corner.x - sideLen, y: corner.y + sideLen * 0.55 },
+        downRight: { x: corner.x + frontLen, y: corner.y + frontLen * 0.55 },
+        scale
+      };
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function drawLabelChip(ctx2, text, x, y, width, height) {
+      ctx2.save();
+      ctx2.font = 'bold 18px Arial';
+      const textWidth = ctx2.measureText(text).width;
+      const padX = 10;
+      const boxW = textWidth + padX * 2;
+      const boxH = 26;
+      const bx = clamp(x - boxW / 2, 8, width - boxW - 8);
+      const by = clamp(y - boxH / 2, 8, height - boxH - 8);
+
+      ctx2.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx2.strokeStyle = '#111827';
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      ctx2.rect(bx, by, boxW, boxH);
+      ctx2.fill();
+      ctx2.stroke();
+
+      ctx2.fillStyle = '#111827';
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(text, bx + boxW / 2, by + boxH / 2 + 1);
+      ctx2.restore();
+    }
+
+    function getFrontSideMapping() {
+      return state.swapFrontSide
+        ? {
+            leftLabel: 'SIDE',
+            rightLabel: 'FRONT',
+            frontGrid: 'sideGrid',
+            sideGrid: 'frontGrid'
+          }
+        : {
+            leftLabel: 'FRONT',
+            rightLabel: 'SIDE',
+            frontGrid: 'frontGrid',
+            sideGrid: 'sideGrid'
+          };
+    }
+
+    function drawDirectionLabels(ctx2, width, height, params) {
+      const { downLeft, downRight, scale } = getGuideGeometry(params);
+      const mapping = getFrontSideMapping();
+      drawLabelChip(ctx2, mapping.leftLabel, downLeft.x - scale * 0.22, downLeft.y + scale * 0.15, width, height);
+      drawLabelChip(ctx2, mapping.rightLabel, downRight.x + scale * 0.22, downRight.y + scale * 0.15, width, height);
+    }
+
+    function drawWallGuides(ctx2, width, height, params) {
+      const { corner, up, downLeft, downRight } = getGuideGeometry(params);
 
       ctx2.save();
       ctx2.strokeStyle = '#374151';
@@ -985,6 +1048,7 @@
       }
       if (state.showWalls) {
         drawWallGuides(ctx, canvas.width, canvas.height, params);
+        drawDirectionLabels(ctx, canvas.width, canvas.height, params);
       }
 
       const drawList = [];
@@ -1136,6 +1200,9 @@
       if (state.exportWalls) {
         drawWallGuides(ctx2, out.width, out.height, params);
       }
+      if (state.exportDirectionLabels) {
+        drawDirectionLabels(ctx2, out.width, out.height, params);
+      }
 
       const drawList = [];
       for (const [k, h] of state.heights.entries()) {
@@ -1164,6 +1231,7 @@
 
     function buildViewsExportCanvas(targetCanvas = null) {
       const data = computePlanData();
+      const mapping = getFrontSideMapping();
       const out = targetCanvas || document.createElement('canvas');
       out.width = 1400;
       out.height = 520;
@@ -1172,8 +1240,8 @@
       ctx2.fillStyle = '#ffffff';
       ctx2.fillRect(0, 0, out.width, out.height);
       drawOrthographicView(ctx2, data.topGrid, 'Top View', 20, 20, 420, 480);
-      drawOrthographicView(ctx2, data.frontGrid, 'Front View', 490, 20, 420, 480);
-      drawOrthographicView(ctx2, data.sideGrid, 'Side View', 960, 20, 420, 480);
+      drawOrthographicView(ctx2, data[mapping.frontGrid], 'Front View', 490, 20, 420, 480);
+      drawOrthographicView(ctx2, data[mapping.sideGrid], 'Side View', 960, 20, 420, 480);
       return out;
     }
 
@@ -1211,8 +1279,10 @@
       toggleWallsBtn.textContent = state.showWalls ? 'Hide Walls' : 'Show Walls';
       toggleDotsBtn.textContent = state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid';
       toggleGuidesBtn.textContent = state.showGuides ? 'Hide Guides' : 'Show Guides';
+      toggleFrontSideBtn.textContent = `Front/Side Mapping: ${state.swapFrontSide ? 'Swapped' : 'Standard'}`;
       toggleExportDotsBtn.textContent = `Export Dots: ${state.exportDots ? 'On' : 'Off'}`;
       toggleExportWallsBtn.textContent = `Export Walls: ${state.exportWalls ? 'On' : 'Off'}`;
+      toggleExportDirectionLabelsBtn.textContent = `Export Front/Side Labels: ${state.exportDirectionLabels ? 'On' : 'Off'}`;
     }
 
     function updateStats() {
@@ -1332,6 +1402,13 @@
       render();
     });
 
+    toggleFrontSideBtn.addEventListener('click', () => {
+      state.swapFrontSide = !state.swapFrontSide;
+      refreshToggleLabels();
+      render();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
+    });
+
     toggleDotsBtn.addEventListener('click', () => {
       state.showDots = !state.showDots;
       render();
@@ -1345,6 +1422,12 @@
 
     toggleExportWallsBtn.addEventListener('click', () => {
       state.exportWalls = !state.exportWalls;
+      refreshToggleLabels();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
+    });
+
+    toggleExportDirectionLabelsBtn.addEventListener('click', () => {
+      state.exportDirectionLabels = !state.exportDirectionLabels;
       refreshToggleLabels();
       if (previewOverlay.classList.contains('open')) openExportPreview();
     });
