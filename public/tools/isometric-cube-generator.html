@@ -28,54 +28,57 @@
     }
 
     .wrap {
-      max-width: 1280px;
+      max-width: 1200px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 16px;
     }
 
     h1 {
-      margin: 0 0 8px;
-      font-size: 30px;
+      margin: 0 0 6px;
+      font-size: 24px;
+      line-height: 1.2;
     }
 
     p.lead {
-      margin: 0 0 20px;
+      margin: 0 0 14px;
       color: var(--muted);
-      line-height: 1.5;
+      line-height: 1.45;
+      font-size: 13px;
     }
 
     .layout {
       display: grid;
-      grid-template-columns: 340px 1fr;
-      gap: 20px;
+      grid-template-columns: 300px 1fr;
+      gap: 14px;
       align-items: start;
     }
 
     .panel {
       background: var(--panel);
       border: 1px solid #e5e7eb;
-      border-radius: 18px;
-      padding: 18px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+      border-radius: 14px;
+      padding: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.04);
     }
 
     .controls {
       display: grid;
-      gap: 14px;
+      gap: 10px;
     }
 
     label {
       display: block;
       font-weight: 700;
-      margin-bottom: 6px;
+      font-size: 13px;
+      margin-bottom: 4px;
     }
 
     input, button {
       width: 100%;
-      font-size: 15px;
-      border-radius: 12px;
+      font-size: 13px;
+      border-radius: 10px;
       border: 1px solid #d1d5db;
-      padding: 10px 12px;
+      padding: 8px 10px;
     }
 
     input[type="range"] { padding: 0; }
@@ -83,7 +86,7 @@
     .row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
     button {
@@ -99,27 +102,28 @@
 
     .small {
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.4;
+      font-size: 12px;
+      line-height: 1.35;
     }
 
     .stats {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 4px;
+      gap: 8px;
+      margin-top: 2px;
     }
 
     .stat {
       border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      padding: 10px;
+      border-radius: 10px;
+      padding: 8px;
       background: #fafafa;
+      font-size: 12px;
     }
 
     .stat strong {
       display: block;
-      font-size: 22px;
+      font-size: 18px;
       margin-top: 4px;
     }
 
@@ -129,16 +133,16 @@
     }
 
     .canvas-head {
-      padding: 16px 18px;
+      padding: 12px 14px;
       border-bottom: 1px solid #e5e7eb;
       display: flex;
       justify-content: space-between;
-      gap: 16px;
+      gap: 12px;
       align-items: center;
     }
 
     .canvas-wrap {
-      padding: 14px;
+      padding: 10px;
       background: #fcfcfc;
     }
 
@@ -175,34 +179,172 @@
       color: #1d4ed8;
       border: 1px solid #bfdbfe;
       border-radius: 999px;
-      padding: 5px 10px;
-      font-size: 12px;
+      padding: 4px 8px;
+      font-size: 11px;
       font-weight: 700;
     }
 
     ul.compact {
       margin: 0;
-      padding-left: 18px;
+      padding-left: 16px;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.45;
+      font-size: 12px;
+      line-height: 1.35;
     }
+
+    details.accordion {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    details.accordion summary {
+      cursor: pointer;
+      padding: 8px 10px;
+      font-weight: 700;
+      font-size: 13px;
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    details.accordion summary::-webkit-details-marker { display: none; }
+
+    details.accordion summary::after {
+      content: '▸';
+      font-size: 11px;
+      color: var(--muted);
+      transition: transform 0.2s;
+    }
+
+    details.accordion[open] summary::after {
+      transform: rotate(90deg);
+    }
+
+    details.accordion .accordion-body {
+      padding: 0 10px 10px;
+    }
+
+
+    .preview-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(17, 24, 39, 0.62);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+      z-index: 40;
+    }
+
+    .preview-overlay.open {
+      display: flex;
+    }
+
+    .preview-dialog {
+      width: min(1100px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: #ffffff;
+      border-radius: 16px;
+      border: 1px solid #d1d5db;
+      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.18);
+      padding: 14px;
+    }
+
+    .preview-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .preview-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fafafa;
+    }
+
+    .preview-card h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+    }
+
+    .preview-card canvas {
+      width: 100%;
+      height: auto;
+      background: white;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      cursor: default;
+      margin-bottom: 8px;
+    }
+
+    .preview-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .preview-actions button {
+      width: auto;
+      min-width: 0;
+      flex: 1;
+    }
+
 
     @media (max-width: 920px) {
       .wrap { padding: 16px; }
       .layout {
-        grid-template-columns: minmax(280px, 320px) minmax(420px, 1fr);
-        gap: 14px;
+        grid-template-columns: minmax(260px, 300px) minmax(420px, 1fr);
+        gap: 12px;
         overflow-x: auto;
         align-items: start;
       }
       .panel { min-width: 0; }
       .canvas-panel { min-width: 520px; }
+      .preview-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <div id="cursorLabel" class="cursor-label"></div>
+  <div id="previewOverlay" class="preview-overlay" aria-hidden="true">
+    <div class="preview-dialog">
+      <div class="preview-head">
+        <div>
+          <strong>Export preview</strong><br />
+          <span class="small">Preview uses the current export settings for dots and walls.</span>
+        </div>
+        <button id="closePreviewBtn" class="secondary" style="width:auto;">Close</button>
+      </div>
+      <div class="preview-grid">
+        <div class="preview-card">
+          <h3>Isometric export</h3>
+          <canvas id="isoPreviewCanvas" width="920" height="680"></canvas>
+          <div class="preview-actions">
+            <button id="downloadIsoFromPreviewBtn" class="tertiary">Download Iso PNG</button>
+          </div>
+        </div>
+        <div class="preview-card">
+          <h3>Orthographic views export</h3>
+          <canvas id="viewsPreviewCanvas" width="1400" height="520"></canvas>
+          <div class="preview-actions">
+            <button id="downloadViewsFromPreviewBtn" class="secondary">Download Views PNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="wrap">
     <h1>Cube Solid Builder</h1>
     <p class="lead">Generate a random connected solid, then edit it directly on the isometric grid. Left click a highlighted face to add a cube. Right click a visible top face to remove the top cube from that stack. <b> Scroll down to bottom of left panel for editing guide</b></p>
@@ -227,25 +369,25 @@
         </div>
 
         <div class="row">
-          <button id="downloadBtn" class="tertiary">Download Iso PNG</button>
-          <button id="toggleWallsBtn" class="secondary">Show Walls</button>
-        </div>
-
-        <div class="row">
-          <button id="exportViewsBtn" class="secondary">Download Views PNG</button>
+          <button id="previewExportsBtn" class="tertiary">Preview Exports</button>
           <button id="toggleGuidesBtn" class="secondary">Hide Guides</button>
         </div>
 
+        <button id="toggleFrontSideBtn" class="secondary">Front/Side Mapping: Standard</button>
+
         <div class="row">
-          <button id="toggleDotsBtn" class="secondary">Show Dotted Grid</button>
-          <div></div>
+          <button id="toggleWallsBtn" class="secondary">Hide Walls</button>
+          <button id="toggleDotsBtn" class="secondary">Hide Dotted Grid</button>
         </div>
 
-        <div class="panel" style="padding:12px; border-radius:12px;">
-          <strong>Export settings (click to change)</strong>
-          <div class="row" style="margin-top:10px;">
-            <button id="toggleExportDotsBtn" class="secondary">Export Without Dots</button>
-            <button id="toggleExportWallsBtn" class="secondary">Export Without Walls</button>
+        <div class="panel" style="padding:10px; border-radius:10px;">
+          <strong>Export settings</strong>
+          <div class="row" style="margin-top:8px;">
+            <button id="toggleExportDotsBtn" class="secondary">Export Dots: On</button>
+            <button id="toggleExportWallsBtn" class="secondary">Export Walls: On</button>
+          </div>
+          <div class="row" style="margin-top:8px;">
+            <button id="toggleExportDirectionLabelsBtn" class="secondary">Export Front/Side Labels: On</button>
           </div>
         </div>
 
@@ -256,26 +398,23 @@
           <div class="stat">Footprint<strong id="statFootprint">0</strong></div>
         </div>
 
-        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
-          <div>
-            <label>How editing works</label>
+        <details class="accordion">
+          <summary>How editing works</summary>
+          <div class="accordion-body">
             <ul class="compact">
               <li><b>To add cube:</b> Left click a highlighted face to attach one cube to that surface.</li>
               <li><b>To remove cube:</b> Right click the visible top face of a stack to remove the top cube.</li>
               <li>Top highlights add a cube on top of a stack; other highlights add a grounded neighbouring cube.</li>
-	<li>Dots and wall are not automatically added to export file despite being present in display. Toggle the export settings for your preferred export format.</li>
-<li>Hide guides to view the cuboid.</li>
-	<li> Views exported will showcase: Top, Front and Side
+              <li>Dots and walls are loaded by default for both the display and export preview. Toggle them if you want a cleaner output.</li>
+              <li>Hide guides to view only the solid.</li>
+              <li>Views preview/export shows Top, Front and Side. You can swap the Front/Side mapping with the toggle above.</li>
               <li>Floating cubes are not allowed in this builder.</li>
-              <li>Optional wall guides can be shown as three simple reference lines anchored to the far back bottom corner of the solid.</li>
-	<li><b><u>Note that randomly generated cubes may result in hidden cubes</b></u></li>
-	
+              <li>Random solids are generated as a solid terraced footprint, so they do not create holes between columns.</li>
+              <li>Wall guides are anchored to the far back bottom corner of the solid.</li>
+              <li>Starting random solids try to avoid hidden cubes from the default isometric viewpoint.</li>
             </ul>
           </div>
-          <div class="small">
-            Conceptualised and vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>
-          </div>
-        </div>
+        </details>
       </div>
 
       <div class="panel canvas-panel">
@@ -293,6 +432,10 @@
     </div>
   </div>
 
+  <footer style="text-align:center; padding:10px 0 14px; font-size:12px; color:var(--muted);">
+    Conceptualised and vibe coded by <a href="mailto:tan_jing_yan@schools.gov.sg">Tan Jing Yan (Julienne)</a>
+  </footer>
+
   <script>
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -302,15 +445,22 @@
     const generateBtn = document.getElementById('generateBtn');
     const resetBtn = document.getElementById('resetBtn');
     const toggleWallsBtn = document.getElementById('toggleWallsBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const exportViewsBtn = document.getElementById('exportViewsBtn');
+    const previewExportsBtn = document.getElementById('previewExportsBtn');
     const toggleGuidesBtn = document.getElementById('toggleGuidesBtn');
+    const toggleFrontSideBtn = document.getElementById('toggleFrontSideBtn');
     const toggleDotsBtn = document.getElementById('toggleDotsBtn');
     const toggleExportDotsBtn = document.getElementById('toggleExportDotsBtn');
     const toggleExportWallsBtn = document.getElementById('toggleExportWallsBtn');
+    const toggleExportDirectionLabelsBtn = document.getElementById('toggleExportDirectionLabelsBtn');
     const shapeTag = document.getElementById('shapeTag');
     const hoverHint = document.getElementById('hoverHint');
     const cursorLabel = document.getElementById('cursorLabel');
+    const previewOverlay = document.getElementById('previewOverlay');
+    const closePreviewBtn = document.getElementById('closePreviewBtn');
+    const isoPreviewCanvas = document.getElementById('isoPreviewCanvas');
+    const viewsPreviewCanvas = document.getElementById('viewsPreviewCanvas');
+    const downloadIsoFromPreviewBtn = document.getElementById('downloadIsoFromPreviewBtn');
+    const downloadViewsFromPreviewBtn = document.getElementById('downloadViewsFromPreviewBtn');
 
     const statCubes = document.getElementById('statCubes');
     const statColumns = document.getElementById('statColumns');
@@ -323,10 +473,12 @@
       removeTargets: [],
       faceTargets: [],
       showGuides: true,
-      showDots: false,
-      exportDots: false,
-      showWalls: false,
-      exportWalls: false,
+      showDots: true,
+      exportDots: true,
+      showWalls: true,
+      exportWalls: true,
+      exportDirectionLabels: true,
+      swapFrontSide: false,
       randomCounter: 0,
       hoveredTarget: null
     };
@@ -346,57 +498,211 @@
     function getHeight(x, y) { return state.heights.get(columnKey(x, y)) || 0; }
     function totalCubes() { let total = 0; for (const h of state.heights.values()) total += h; return total; }
     function setMapHeight(map, x, y, h) { const k = columnKey(x, y); if (h <= 0) map.delete(k); else map.set(k, h); }
+    function getMapHeight(map, x, y) { return map.get(columnKey(x, y)) || 0; }
 
-    function generateSolid(n, spread) {
-      const seed = Date.now() + (state.randomCounter++ * 1013904223) + Math.floor(Math.random() * 1e9);
-      const rand = mulberry32(seed >>> 0);
+    function countHiddenCubes(map) {
+      let hidden = 0;
+      for (const [k, h] of map.entries()) {
+        const { x, y } = parseColumnKey(k);
+        const leftH = getMapHeight(map, x - 1, y);
+        const rightH = getMapHeight(map, x, y - 1);
+        for (let z = 0; z < h; z++) {
+          const topVisible = z === h - 1;
+          const leftVisible = leftH <= z;
+          const rightVisible = rightH <= z;
+          if (!topVisible && !leftVisible && !rightVisible) hidden += 1;
+        }
+      }
+      return hidden;
+    }
+
+    function totalMapCubes(map) {
+      let total = 0;
+      for (const h of map.values()) total += h;
+      return total;
+    }
+
+    function getAxisMax(map, axis) {
+      let max = 0;
+      for (const [k] of map.entries()) {
+        const { x, y } = parseColumnKey(k);
+        max = Math.max(max, axis === 'x' ? x : y);
+      }
+      return max;
+    }
+
+    function hasSolidAnchoredFootprint(map) {
+      if (!map.size) return true;
+      const maxX = getAxisMax(map, 'x');
+      const maxY = getAxisMax(map, 'y');
+
+      for (let y = 0; y <= maxY; y++) {
+        let seenGap = false;
+        for (let x = 0; x <= maxX; x++) {
+          const occupied = map.has(columnKey(x, y));
+          if (!occupied) {
+            seenGap = true;
+          } else if (seenGap) {
+            return false;
+          }
+        }
+      }
+
+      for (let x = 0; x <= maxX; x++) {
+        let seenGap = false;
+        for (let y = 0; y <= maxY; y++) {
+          const occupied = map.has(columnKey(x, y));
+          if (!occupied) {
+            seenGap = true;
+          } else if (seenGap) {
+            return false;
+          }
+        }
+      }
+
+      return true;
+    }
+
+    function getAxisProfiles(map) {
+      const maxX = getAxisMax(map, 'x');
+      const maxY = getAxisMax(map, 'y');
+      const front = [];
+      const side = [];
+
+      for (let x = 0; x <= maxX; x++) front.push(getMapHeight(map, x, 0));
+      for (let y = 0; y <= maxY; y++) side.push(getMapHeight(map, 0, y));
+
+      return { front, side };
+    }
+
+    function isNonIncreasingProfile(profile) {
+      for (let i = 1; i < profile.length; i++) {
+        if (profile[i] > profile[i - 1]) return false;
+      }
+      return true;
+    }
+
+    function isTerracedRandomShape(map) {
+      if (!hasSolidAnchoredFootprint(map)) return false;
+
+      for (const [k, h] of map.entries()) {
+        const { x, y } = parseColumnKey(k);
+        if (x < 0 || y < 0) return false;
+        if (x > 0 && y > 0 && h > 1) return false;
+      }
+
+      const { front, side } = getAxisProfiles(map);
+      if (!isNonIncreasingProfile(front) || !isNonIncreasingProfile(side)) return false;
+
+      return countHiddenCubes(map) === 0;
+    }
+
+    function collectTerracedCandidates(map) {
+      const candidates = [];
+      const maxX = getAxisMax(map, 'x');
+      const maxY = getAxisMax(map, 'y');
+
+      for (let x = 0; x <= maxX; x++) {
+        const current = getMapHeight(map, x, 0);
+        const nextHeight = current + 1;
+        const leftOk = x === 0 || getMapHeight(map, x - 1, 0) >= nextHeight;
+        const rightOk = x === maxX || getMapHeight(map, x + 1, 0) <= nextHeight;
+        if (leftOk && rightOk) {
+          candidates.push({ type: x === 0 ? 'raise-origin' : 'raise-front', x, y: 0, h: nextHeight });
+        }
+      }
+
+      for (let y = 1; y <= maxY; y++) {
+        const current = getMapHeight(map, 0, y);
+        const nextHeight = current + 1;
+        const backOk = getMapHeight(map, 0, y - 1) >= nextHeight;
+        const frontOk = y === maxY || getMapHeight(map, 0, y + 1) <= nextHeight;
+        if (backOk && frontOk) {
+          candidates.push({ type: 'raise-side', x: 0, y, h: nextHeight });
+        }
+      }
+
+      candidates.push({ type: 'new-front-axis', x: maxX + 1, y: 0, h: 1 });
+      candidates.push({ type: 'new-side-axis', x: 0, y: maxY + 1, h: 1 });
+
+      for (let y = 1; y <= maxY; y++) {
+        for (let x = 1; x <= maxX; x++) {
+          if (map.has(columnKey(x, y))) continue;
+          if (getMapHeight(map, x - 1, y) < 1) continue;
+          if (getMapHeight(map, x, y - 1) < 1) continue;
+          candidates.push({ type: 'fill-interior', x, y, h: 1 });
+        }
+      }
+
+      return candidates;
+    }
+
+    function scoreTerracedCandidate(candidate, spread, rand) {
+      const wideBias = spread / 100;
+      const distance = candidate.x + candidate.y;
+      const heightPenalty = Math.max(0, candidate.h - 1) * (0.8 - wideBias * 0.45);
+      let score = distance * (0.32 + wideBias * 0.18) + heightPenalty;
+
+      if (candidate.type === 'raise-origin') score += (wideBias * 2.2);
+      if (candidate.type === 'raise-front' || candidate.type === 'raise-side') score += (wideBias * 1.4);
+      if (candidate.type === 'new-front-axis' || candidate.type === 'new-side-axis') score += ((1 - wideBias) * 1.6);
+      if (candidate.type === 'fill-interior') score += ((1 - wideBias) * 0.7);
+
+      score += rand() * 0.18;
+      return score;
+    }
+
+    function buildFallbackVisibleSolid(n, spread) {
       const heights = new Map();
       heights.set(columnKey(0, 0), 1);
+      const rand = mulberry32((Date.now() ^ (n * 2654435761) ^ Math.floor(spread * 131)) >>> 0);
 
-      while (Array.from(heights.values()).reduce((a, b) => a + b, 0) < n) {
-        const currentColumns = Array.from(heights.keys()).map(parseColumnKey);
-        const baseChance = spread / 100;
-        const doNewColumn = rand() < baseChance || currentColumns.length === 0;
-        let candidates = [];
+      while (totalMapCubes(heights) < n) {
+        const candidates = collectTerracedCandidates(heights)
+          .filter(candidate => {
+            const next = new Map(heights);
+            setMapHeight(next, candidate.x, candidate.y, candidate.h);
+            return isTerracedRandomShape(next);
+          });
 
-        if (doNewColumn) {
-          const seen = new Set();
-          for (const c of currentColumns) {
-            const neighbors = [
-              { x: c.x + 1, y: c.y },
-              { x: c.x - 1, y: c.y },
-              { x: c.x, y: c.y + 1 },
-              { x: c.x, y: c.y - 1 }
-            ];
-            for (const nb of neighbors) {
-              const ck = columnKey(nb.x, nb.y);
-              if (!heights.has(ck) && !seen.has(ck)) {
-                seen.add(ck);
-                candidates.push({ x: nb.x, y: nb.y, h: 1 });
-              }
-            }
-          }
-        }
-
-        if (candidates.length === 0) {
-          for (const c of currentColumns) {
-            const h = heights.get(columnKey(c.x, c.y));
-            candidates.push({ x: c.x, y: c.y, h: h + 1 });
-          }
-        }
-
-        candidates.sort((a, b) => {
-          const da = Math.abs(a.x) + Math.abs(a.y) + a.h * (1 - spread / 100);
-          const db = Math.abs(b.x) + Math.abs(b.y) + b.h * (1 - spread / 100);
-          return da - db;
-        });
-
-        const sampleWindow = Math.max(1, Math.ceil(candidates.length * 0.55));
+        candidates.sort((a, b) => scoreTerracedCandidate(a, spread, rand) - scoreTerracedCandidate(b, spread, rand));
+        const sampleWindow = Math.max(1, Math.ceil(candidates.length * 0.65));
         const chosen = candidates[Math.floor(rand() * sampleWindow)];
         setMapHeight(heights, chosen.x, chosen.y, chosen.h);
       }
 
       return { heights };
+    }
+
+    function generateVisibleSolid(n, spread) {
+      const seed = Date.now() + (state.randomCounter++ * 1013904223) + Math.floor(Math.random() * 1e9);
+      const rand = mulberry32(seed >>> 0);
+      const heights = new Map();
+      heights.set(columnKey(0, 0), 1);
+      let safety = 0;
+
+      while (totalMapCubes(heights) < n && safety < n * 80) {
+        safety += 1;
+        const candidates = collectTerracedCandidates(heights)
+          .filter(candidate => {
+            const next = new Map(heights);
+            setMapHeight(next, candidate.x, candidate.y, candidate.h);
+            return isTerracedRandomShape(next);
+          });
+
+        if (!candidates.length) break;
+
+        candidates.sort((a, b) => scoreTerracedCandidate(a, spread, rand) - scoreTerracedCandidate(b, spread, rand));
+        const sampleWindow = Math.max(1, Math.ceil(candidates.length * 0.7));
+        const chosen = candidates[Math.floor(rand() * sampleWindow)];
+        setMapHeight(heights, chosen.x, chosen.y, chosen.h);
+      }
+
+      if (totalMapCubes(heights) === n && isTerracedRandomShape(heights)) {
+        return { heights };
+      }
+
+      return buildFallbackVisibleSolid(n, spread);
     }
 
     function isoProject(x, y, z, scale, ox, oy) {
@@ -567,28 +873,82 @@
       return edges;
     }
 
-    function drawWallGuides(ctx2, width, height, params) {
+    function getGuideGeometry(params) {
       const { bounds, scale, ox, oy } = params;
-
-      // Anchor the trihedral reference lines at the bottom-most cube corner that is
-      // farthest from the viewer: the back-left-bottom lattice point of the solid.
-      // Then extend the three rays so they reach just beyond the solid's extents in
-      // the top, front, and side directions.
       const anchor = isoProject(bounds.minX, bounds.minY, 0, scale, ox, oy);
       const corner = { x: anchor.x, y: anchor.y + scale * 0.55 };
 
       const verticalLen = (bounds.maxH + 1.1) * scale * 1.1;
-      // extend slightly beyond solid (~1 extra cube length for visibility)
       const frontLen = (bounds.maxX - bounds.minX + 2.15) * scale;
       const sideLen = (bounds.maxY - bounds.minY + 2.15) * scale;
 
-      const up = { x: corner.x, y: corner.y - verticalLen };
-      const downLeft = { x: corner.x - sideLen, y: corner.y + sideLen * 0.55 };
-      const downRight = { x: corner.x + frontLen, y: corner.y + frontLen * 0.55 };
+      return {
+        corner,
+        up: { x: corner.x, y: corner.y - verticalLen },
+        downLeft: { x: corner.x - sideLen, y: corner.y + sideLen * 0.55 },
+        downRight: { x: corner.x + frontLen, y: corner.y + frontLen * 0.55 },
+        scale
+      };
+    }
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, value));
+    }
+
+    function drawLabelChip(ctx2, text, x, y, width, height) {
+      ctx2.save();
+      ctx2.font = 'bold 18px Arial';
+      const textWidth = ctx2.measureText(text).width;
+      const padX = 10;
+      const boxW = textWidth + padX * 2;
+      const boxH = 26;
+      const bx = clamp(x - boxW / 2, 8, width - boxW - 8);
+      const by = clamp(y - boxH / 2, 8, height - boxH - 8);
+
+      ctx2.fillStyle = 'rgba(255,255,255,0.94)';
+      ctx2.strokeStyle = '#111827';
+      ctx2.lineWidth = 1.5;
+      ctx2.beginPath();
+      ctx2.rect(bx, by, boxW, boxH);
+      ctx2.fill();
+      ctx2.stroke();
+
+      ctx2.fillStyle = '#111827';
+      ctx2.textAlign = 'center';
+      ctx2.textBaseline = 'middle';
+      ctx2.fillText(text, bx + boxW / 2, by + boxH / 2 + 1);
+      ctx2.restore();
+    }
+
+    function getFrontSideMapping() {
+      return state.swapFrontSide
+        ? {
+            leftLabel: 'SIDE',
+            rightLabel: 'FRONT',
+            frontGrid: 'sideGrid',
+            sideGrid: 'frontGrid'
+          }
+        : {
+            leftLabel: 'FRONT',
+            rightLabel: 'SIDE',
+            frontGrid: 'frontGrid',
+            sideGrid: 'sideGrid'
+          };
+    }
+
+    function drawDirectionLabels(ctx2, width, height, params) {
+      const { downLeft, downRight, scale } = getGuideGeometry(params);
+      const mapping = getFrontSideMapping();
+      drawLabelChip(ctx2, mapping.leftLabel, downLeft.x - scale * 0.22, downLeft.y + scale * 0.15, width, height);
+      drawLabelChip(ctx2, mapping.rightLabel, downRight.x + scale * 0.22, downRight.y + scale * 0.15, width, height);
+    }
+
+    function drawWallGuides(ctx2, width, height, params) {
+      const { corner, up, downLeft, downRight } = getGuideGeometry(params);
 
       ctx2.save();
-      ctx2.strokeStyle = '#6b7280';
-      ctx2.lineWidth = 1.6;
+      ctx2.strokeStyle = '#374151';
+      ctx2.lineWidth = 2.2;
       ctx2.lineCap = 'round';
 
       const lines = [
@@ -725,6 +1085,7 @@
       }
       if (state.showWalls) {
         drawWallGuides(ctx, canvas.width, canvas.height, params);
+        drawDirectionLabels(ctx, canvas.width, canvas.height, params);
       }
 
       const drawList = [];
@@ -789,6 +1150,7 @@
 
       drawHoveredOutline();
       hoverHint.textContent = describeTarget(state.hoveredTarget);
+      refreshToggleLabels();
       updateStats();
     }
 
@@ -858,11 +1220,12 @@
       ctx2.restore();
     }
 
-    function exportIsometricPng() {
-      const out = document.createElement('canvas');
+    function buildIsometricExportCanvas(targetCanvas = null) {
+      const out = targetCanvas || document.createElement('canvas');
       out.width = canvas.width;
       out.height = canvas.height;
       const ctx2 = out.getContext('2d');
+      ctx2.clearRect(0, 0, out.width, out.height);
       ctx2.fillStyle = '#ffffff';
       ctx2.fillRect(0, 0, out.width, out.height);
 
@@ -873,6 +1236,9 @@
       }
       if (state.exportWalls) {
         drawWallGuides(ctx2, out.width, out.height, params);
+      }
+      if (state.exportDirectionLabels) {
+        drawDirectionLabels(ctx2, out.width, out.height, params);
       }
 
       const drawList = [];
@@ -897,28 +1263,63 @@
         fillPoly(polys.right, faceRight, '#111827', 2, ctx2);
         fillPoly(polys.top, faceTop, '#111827', 2, ctx2);
       }
-
-      const link = document.createElement('a');
-      link.download = state.exportDots ? 'cube-solid-isometric-dotted.png' : 'cube-solid-isometric.png';
-      link.href = out.toDataURL('image/png');
-      link.click();
+      return out;
     }
 
-    function exportViewsPng() {
+    function buildViewsExportCanvas(targetCanvas = null) {
       const data = computePlanData();
-      const out = document.createElement('canvas');
+      const mapping = getFrontSideMapping();
+      const out = targetCanvas || document.createElement('canvas');
       out.width = 1400;
       out.height = 520;
       const ctx2 = out.getContext('2d');
+      ctx2.clearRect(0, 0, out.width, out.height);
       ctx2.fillStyle = '#ffffff';
       ctx2.fillRect(0, 0, out.width, out.height);
       drawOrthographicView(ctx2, data.topGrid, 'Top View', 20, 20, 420, 480);
-      drawOrthographicView(ctx2, data.frontGrid, 'Front View', 490, 20, 420, 480);
-      drawOrthographicView(ctx2, data.sideGrid, 'Side View', 960, 20, 420, 480);
+      drawOrthographicView(ctx2, data[mapping.frontGrid], 'Front View', 490, 20, 420, 480);
+      drawOrthographicView(ctx2, data[mapping.sideGrid], 'Side View', 960, 20, 420, 480);
+      return out;
+    }
+
+    function downloadCanvas(canvasToDownload, filename) {
       const link = document.createElement('a');
-      link.download = 'cube-solid-views.png';
-      link.href = out.toDataURL('image/png');
+      link.download = filename;
+      link.href = canvasToDownload.toDataURL('image/png');
       link.click();
+    }
+
+    function exportIsometricPng() {
+      const out = buildIsometricExportCanvas();
+      const name = state.exportDots ? 'cube-solid-isometric-dotted.png' : 'cube-solid-isometric.png';
+      downloadCanvas(out, name);
+    }
+
+    function exportViewsPng() {
+      const out = buildViewsExportCanvas();
+      downloadCanvas(out, 'cube-solid-views.png');
+    }
+
+    function openExportPreview() {
+      buildIsometricExportCanvas(isoPreviewCanvas);
+      buildViewsExportCanvas(viewsPreviewCanvas);
+      previewOverlay.classList.add('open');
+      previewOverlay.setAttribute('aria-hidden', 'false');
+    }
+
+    function closeExportPreview() {
+      previewOverlay.classList.remove('open');
+      previewOverlay.setAttribute('aria-hidden', 'true');
+    }
+
+    function refreshToggleLabels() {
+      toggleWallsBtn.textContent = state.showWalls ? 'Hide Walls' : 'Show Walls';
+      toggleDotsBtn.textContent = state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid';
+      toggleGuidesBtn.textContent = state.showGuides ? 'Hide Guides' : 'Show Guides';
+      toggleFrontSideBtn.textContent = `Front/Side Mapping: ${state.swapFrontSide ? 'Swapped' : 'Standard'}`;
+      toggleExportDotsBtn.textContent = `Export Dots: ${state.exportDots ? 'On' : 'Off'}`;
+      toggleExportWallsBtn.textContent = `Export Walls: ${state.exportWalls ? 'On' : 'Off'}`;
+      toggleExportDirectionLabelsBtn.textContent = `Export Front/Side Labels: ${state.exportDirectionLabels ? 'On' : 'Off'}`;
     }
 
     function updateStats() {
@@ -935,7 +1336,7 @@
       const n = Math.max(1, Math.min(60, parseInt(cubeCountInput.value || '8', 10)));
       cubeCountInput.value = n;
       const spread = parseInt(spreadInput.value, 10);
-      const solid = generateSolid(n, spread);
+      const solid = generateVisibleSolid(n, spread);
       state.heights = new Map(solid.heights);
       render();
     }
@@ -1021,36 +1422,60 @@
     resetBtn.addEventListener('click', clearAll);
     toggleWallsBtn.addEventListener('click', () => {
       state.showWalls = !state.showWalls;
-      toggleWallsBtn.textContent = state.showWalls ? 'Hide Walls' : 'Show Walls';
       render();
     });
     cubeCountInput.addEventListener('change', randomise);
     spreadInput.addEventListener('input', randomise);
-    downloadBtn.addEventListener('click', exportIsometricPng);
-    exportViewsBtn.addEventListener('click', exportViewsPng);
+    previewExportsBtn.addEventListener('click', openExportPreview);
+    downloadIsoFromPreviewBtn.addEventListener('click', exportIsometricPng);
+    downloadViewsFromPreviewBtn.addEventListener('click', exportViewsPng);
+    closePreviewBtn.addEventListener('click', closeExportPreview);
+    previewOverlay.addEventListener('click', (event) => {
+      if (event.target === previewOverlay) closeExportPreview();
+    });
 
     toggleGuidesBtn.addEventListener('click', () => {
       state.showGuides = !state.showGuides;
-      toggleGuidesBtn.textContent = state.showGuides ? 'Hide Guides' : 'Show Guides';
       render();
+    });
+
+    toggleFrontSideBtn.addEventListener('click', () => {
+      state.swapFrontSide = !state.swapFrontSide;
+      refreshToggleLabels();
+      render();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
     });
 
     toggleDotsBtn.addEventListener('click', () => {
       state.showDots = !state.showDots;
-      toggleDotsBtn.textContent = state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid';
       render();
     });
 
     toggleExportDotsBtn.addEventListener('click', () => {
       state.exportDots = !state.exportDots;
-      toggleExportDotsBtn.textContent = state.exportDots ? 'Export With Dots' : 'Export Without Dots';
+      refreshToggleLabels();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
     });
 
     toggleExportWallsBtn.addEventListener('click', () => {
       state.exportWalls = !state.exportWalls;
-      toggleExportWallsBtn.textContent = state.exportWalls ? 'Export With Walls' : 'Export Without Walls';
+      refreshToggleLabels();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
     });
 
+    toggleExportDirectionLabelsBtn.addEventListener('click', () => {
+      state.exportDirectionLabels = !state.exportDirectionLabels;
+      refreshToggleLabels();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && previewOverlay.classList.contains('open')) {
+        closeExportPreview();
+      }
+    });
+
+    refreshToggleLabels();
     randomise();
   </script>
   <script src="/tracker.js"></script>

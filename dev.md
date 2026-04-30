@@ -20,7 +20,7 @@ Three tools served as static HTML files from `/public/tools/`. Not migrated to R
 |------|-----------|-------|
 | Circuit Symbol Diagram | `circuit_diagram_creator.html` | `/tools/circuits` (symbol tab) |
 | Circuit Object Diagram | `object_circuit.html` | `/tools/circuits` (object tab) |
-| Isometric Cube Generator | `isometric-cube-generator.html` | `/tools/isometric-cube` |
+| Isometric Cube Generator | `isometric-cube-generator.html` (v2) | `/tools/isometric-cube` |
 
 ### Decision — Combined circuit view
 
@@ -142,6 +142,7 @@ Run with `npm test`. 20 tests across 3 suites, all passing.
 |------|-------------|
 | 2026-03-24 | Project scaffolded. Next.js + NeonDB + Tailwind. dev.md created with full architecture decisions. |
 | 2026-03-24 | Tests added: API route (8 tests), tracker.js (7 tests), index page (5 tests). All 20 passing. |
+| 2026-05-01 | Isometric cube v2 deployed: preview overlay before download, toggle Front/Side mapping, export direction-label toggle. tracker.js updated with new button IDs (`downloadIsoFromPreviewBtn`, `downloadViewsFromPreviewBtn`). 14 new tests in `isometric-cube.test.js`. |
 
 ---
 

@@ -9,6 +9,9 @@ node_modules/
 .env.local
 .env.*.local
 
+# local Claude skills — not for source control
+.claude/skills/
+
 # OS / editor noise
 .DS_Store
 Thumbs.db
