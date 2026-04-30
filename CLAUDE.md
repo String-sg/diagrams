@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev       # Start local dev server at http://localhost:3000
-npm test          # Run all Jest tests (95 tests, 8 suites)
+npm test          # Run all Jest tests (118 tests, 10 suites)
 npm run build     # Production build
 ```
 
@@ -57,7 +57,7 @@ New tools added to `public/tools/` also need a new `tool-id` added to `VALID_TOO
 - **`/tools/circuits`** — primary school; wraps `circuit_pri_suitev2.html`, which is a shell that hosts both `circuit_diagram_creatorv3.html` (symbol) and `object_circuitv3.html` (object) in iframes. The toggle lives in the suite HTML and switches views by changing CSS visibility, so both iframes remain mounted and canvas state is preserved per view.
 - **`/tools/circuits-secjc`** — wraps `circuit_diagram_secjcv2.html`. 3-column layout with extended components (transistor, transformer, potentiometer, solenoid, LED, etc.).
 - **`/tools/water-tank`** — wraps `water_tank_generator.html`. Depends on `tap.png` being co-located in `public/tools/`.
-- **`/tools/isometric-cube`** — wraps `isometric_cube.html`.
+- **`/tools/isometric-cube`** — wraps `isometric-cube-generator.html` (v2). Features: preview overlay before download, toggle Front/Side mapping, export dots/walls/direction-label toggles.
 
 The old suite (`circuit-diagram-suite.html`) and earlier versions remain at the repo root as reference; the deployed versions in `public/tools/` are the `v3` copies (and `secjcv2`).
 
@@ -65,7 +65,7 @@ The old suite (`circuit-diagram-suite.html`) and earlier versions remain at the 
 
 `public/tracker.js` is injected into every HTML tool. It:
 1. Gets/creates a persistent anonymous UUID in `localStorage` (`diag_uid` key)
-2. Attaches click listeners to `#exportBtn`, `#downloadBtn`, `#exportViewsBtn`
+2. Attaches click listeners to `#exportBtn`, `#downloadBtn`, `#exportViewsBtn`, `#downloadIsoFromPreviewBtn`, `#downloadViewsFromPreviewBtn`
 3. POSTs `{ uuid, tool }` to `/api/event` on export
 
 `app/api/event/route.ts` validates the payload, applies a **5-minute rate limit per UUID+tool** via a DB query, then upserts the user row and inserts the event. Silent 200 on rate-limit hit.
@@ -78,7 +78,7 @@ The old suite (`circuit-diagram-suite.html`) and earlier versions remain at the 
 
 ## Tests
 
-Eight suites in `__tests__/` (95 tests total):
+Nine suites in `__tests__/` (109 tests total):
 
 **API & infrastructure**
 - `api/event.test.ts` — API route: input validation, rate-limit behaviour, happy-path DB call sequence, all 5 valid tool names accepted. DB is mocked via `jest.mock('@/lib/db')`.
@@ -93,6 +93,7 @@ Eight suites in `__tests__/` (95 tests total):
 - `circuit-secjc.test.js` — same functions plus `rotatePoint` from `circuit_diagram_secjcv2.html`. GRID=22.4, includes transistor (3-node) and transformer (2-node) geometry.
 - `object-circuit.test.js` — `rotatePoint`, `getLocalNodes`, `getComponentNodes` from `object_circuitv3.html`. **COMPONENT_SCALE=0.8** (battery/switch nodes), **BULB_SCALE=1** (bulb nodes unscaled).
 - `water-tank.test.js` — IIFE-based script; tested via DOM events (`fireInput`/`fireChange`) and `svgWrap.innerHTML` inspection.
+- `isometric-cube.test.js` — v2 cube tool; tests toggle front/side mapping, preview overlay open/close (incl. Escape key), export settings toggles (dots, walls, direction labels), and button label refresh. Canvas mocked via `HTMLCanvasElement.prototype.getContext`.
 
 **Canvas test pattern**: `__tests__/canvas/helpers.js` provides `loadCircuitScript` (eval-extracts functions from HTML) and `loadIifeScript` (eval-runs IIFE scripts). The helpers file is excluded from Jest test discovery via `testPathIgnorePatterns`.
 
