@@ -475,8 +475,8 @@
       const hit = findHit(p); state.selected = hit; syncControls();
       if (hit?.kind === 'component' && state.tool === 'select') {
         const comp = state.components.find(c => c.id === hit.id);
-        if (['arrow', 'divider-arrow', 'label-line'].includes(comp?.type)) state.dragging = { mode: 'move-arrow', id: comp.id, lastX: p.x, lastY: p.y };
-        else state.dragging = { mode: 'move-component', id: comp.id, offsetX: comp.x - (comp.type === 'textbox' ? p.x : snapped.x), offsetY: comp.y - (comp.type === 'textbox' ? p.y : snapped.y) };
+        if (['arrow', 'divider-arrow', 'label-line'].includes(comp?.type)) state.dragging = { mode: 'move-arrow', id: comp.id, lastX: p.x, lastY: p.y, moved: false };
+        else state.dragging = { mode: 'move-component', id: comp.id, offsetX: comp.x - (comp.type === 'textbox' ? p.x : snapped.x), offsetY: comp.y - (comp.type === 'textbox' ? p.y : snapped.y), moved: false };
       }
       render();
     });
@@ -488,12 +488,14 @@
       if (state.dragging.mode === 'divider-arrow') { state.dragging.current = snapped; state.wirePreview = { a: state.dragging.start, b: snapped, kind: 'divider-arrow' }; render(); }
       if (state.dragging.mode === 'move-component') {
         const comp = state.components.find(c => c.id === state.dragging.id); if (!comp) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
         if (comp.type === 'textbox') { comp.x = p.x + state.dragging.offsetX; comp.y = p.y + state.dragging.offsetY; }
         else { comp.x = snapped.x + state.dragging.offsetX; comp.y = snapped.y + state.dragging.offsetY; autoAlignComponent(comp); rebuildJunctions(); }
         render();
       }
       if (state.dragging.mode === 'move-arrow') {
         const comp = state.components.find(c => c.id === state.dragging.id); if (!comp) return;
+        if (!state.dragging.moved) { saveHistory(); state.dragging.moved = true; }
         let dx = p.x - state.dragging.lastX, dy = p.y - state.dragging.lastY;
         if (comp.type === 'divider-arrow') { const targetX = snap(comp.x + dx), targetY = snap(comp.y + dy); dx = targetX - comp.x; dy = targetY - comp.y; }
         comp.x1 += dx; comp.y1 += dy; comp.x2 += dx; comp.y2 += dy; comp.x += dx; comp.y += dy;
@@ -505,7 +507,7 @@
       if (!state.dragging) return;
       if (state.dragging.mode === 'wire' && distance(state.dragging.start, state.dragging.current) > 0) { saveHistory(); state.wires.push({ id: state.nextId++, a: state.dragging.start, b: state.dragging.current }); rebuildJunctions(); state.selected = { kind: 'wire', id: state.nextId - 1 }; }
       if (['arrow', 'label-line', 'divider-arrow'].includes(state.dragging.mode) && distance(state.dragging.start, state.dragging.current) > 3) addArrow(state.dragging.start, state.dragging.current, state.dragging.mode === 'arrow' ? 'arrow' : state.dragging.mode === 'label-line' ? 'label-line' : 'divider-arrow');
-      if (['move-component', 'move-arrow'].includes(state.dragging.mode)) { if (state.dragging.mode === 'move-component') rebuildJunctions(); saveHistory(); state.history.push(state.history.pop()); }
+      if (['move-component', 'move-arrow'].includes(state.dragging.mode)) { if (state.dragging.mode === 'move-component') rebuildJunctions(); }
       state.dragging = null; state.wirePreview = null; render();
     });
 
