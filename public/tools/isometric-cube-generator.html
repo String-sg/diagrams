@@ -323,7 +323,7 @@
       <div class="preview-head">
         <div>
           <strong>Export preview</strong><br />
-          <span class="small">Preview uses the current export settings for dots and walls.</span>
+          <span class="small">Export matches your canvas view (minus guides).</span>
         </div>
         <button id="closePreviewBtn" class="secondary" style="width:auto;">Close</button>
       </div>
@@ -381,14 +381,7 @@
         </div>
 
         <div class="panel" style="padding:10px; border-radius:10px;">
-          <strong>Export settings</strong>
-          <div class="row" style="margin-top:8px;">
-            <button id="toggleExportDotsBtn" class="secondary">Export Dots: On</button>
-            <button id="toggleExportWallsBtn" class="secondary">Export Walls: On</button>
-          </div>
-          <div class="row" style="margin-top:8px;">
-            <button id="toggleExportDirectionLabelsBtn" class="secondary">Export Front/Side Labels: On</button>
-          </div>
+          <span class="small">Export is WYSIWYG — what you see on canvas is what gets exported (minus guides).</span>
         </div>
 
         <div class="stats">
@@ -405,8 +398,7 @@
               <li><b>To add cube:</b> Left click a highlighted face to attach one cube to that surface.</li>
               <li><b>To remove cube:</b> Right click the visible top face of a stack to remove the top cube.</li>
               <li>Top highlights add a cube on top of a stack; other highlights add a grounded neighbouring cube.</li>
-              <li>Dots and walls are loaded by default for both the display and export preview. Toggle them if you want a cleaner output.</li>
-              <li>Hide guides to view only the solid.</li>
+              <li>Export is WYSIWYG — toggle dots and walls on canvas to control what gets exported. Guides are excluded from export.</li>
               <li>Views preview/export shows Top, Front and Side. You can swap the Front/Side mapping with the toggle above.</li>
               <li>Floating cubes are not allowed in this builder.</li>
               <li>Random solids are generated as a solid terraced footprint, so they do not create holes between columns.</li>
@@ -449,9 +441,6 @@
     const toggleGuidesBtn = document.getElementById('toggleGuidesBtn');
     const toggleFrontSideBtn = document.getElementById('toggleFrontSideBtn');
     const toggleDotsBtn = document.getElementById('toggleDotsBtn');
-    const toggleExportDotsBtn = document.getElementById('toggleExportDotsBtn');
-    const toggleExportWallsBtn = document.getElementById('toggleExportWallsBtn');
-    const toggleExportDirectionLabelsBtn = document.getElementById('toggleExportDirectionLabelsBtn');
     const shapeTag = document.getElementById('shapeTag');
     const hoverHint = document.getElementById('hoverHint');
     const cursorLabel = document.getElementById('cursorLabel');
@@ -474,10 +463,7 @@
       faceTargets: [],
       showGuides: true,
       showDots: true,
-      exportDots: true,
       showWalls: true,
-      exportWalls: true,
-      exportDirectionLabels: true,
       swapFrontSide: false,
       randomCounter: 0,
       hoveredTarget: null
@@ -1231,13 +1217,11 @@
 
       const params = computeRenderParams(out.width, out.height);
       const { scale, ox, oy } = params;
-      if (state.exportDots) {
+      if (state.showDots) {
         drawProjectedDots(ctx2, out.width, out.height, params);
       }
-      if (state.exportWalls) {
+      if (state.showWalls) {
         drawWallGuides(ctx2, out.width, out.height, params);
-      }
-      if (state.exportDirectionLabels) {
         drawDirectionLabels(ctx2, out.width, out.height, params);
       }
 
@@ -1291,7 +1275,7 @@
 
     function exportIsometricPng() {
       const out = buildIsometricExportCanvas();
-      const name = state.exportDots ? 'cube-solid-isometric-dotted.png' : 'cube-solid-isometric.png';
+      const name = state.showDots ? 'cube-solid-isometric-dotted.png' : 'cube-solid-isometric.png';
       downloadCanvas(out, name);
     }
 
@@ -1317,9 +1301,6 @@
       toggleDotsBtn.textContent = state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid';
       toggleGuidesBtn.textContent = state.showGuides ? 'Hide Guides' : 'Show Guides';
       toggleFrontSideBtn.textContent = `Front/Side Mapping: ${state.swapFrontSide ? 'Swapped' : 'Standard'}`;
-      toggleExportDotsBtn.textContent = `Export Dots: ${state.exportDots ? 'On' : 'Off'}`;
-      toggleExportWallsBtn.textContent = `Export Walls: ${state.exportWalls ? 'On' : 'Off'}`;
-      toggleExportDirectionLabelsBtn.textContent = `Export Front/Side Labels: ${state.exportDirectionLabels ? 'On' : 'Off'}`;
     }
 
     function updateStats() {
@@ -1422,7 +1403,9 @@
     resetBtn.addEventListener('click', clearAll);
     toggleWallsBtn.addEventListener('click', () => {
       state.showWalls = !state.showWalls;
+      refreshToggleLabels();
       render();
+      if (previewOverlay.classList.contains('open')) openExportPreview();
     });
     cubeCountInput.addEventListener('change', randomise);
     spreadInput.addEventListener('input', randomise);
@@ -1448,24 +1431,8 @@
 
     toggleDotsBtn.addEventListener('click', () => {
       state.showDots = !state.showDots;
+      refreshToggleLabels();
       render();
-    });
-
-    toggleExportDotsBtn.addEventListener('click', () => {
-      state.exportDots = !state.exportDots;
-      refreshToggleLabels();
-      if (previewOverlay.classList.contains('open')) openExportPreview();
-    });
-
-    toggleExportWallsBtn.addEventListener('click', () => {
-      state.exportWalls = !state.exportWalls;
-      refreshToggleLabels();
-      if (previewOverlay.classList.contains('open')) openExportPreview();
-    });
-
-    toggleExportDirectionLabelsBtn.addEventListener('click', () => {
-      state.exportDirectionLabels = !state.exportDirectionLabels;
-      refreshToggleLabels();
       if (previewOverlay.classList.contains('open')) openExportPreview();
     });
 

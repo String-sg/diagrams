@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  *
  * Tests for isometric-cube-generator.html (v2) UI logic.
- * Covers: toggle front/side mapping, preview overlay, export setting toggles,
- * and button label refreshes. Canvas rendering is mocked — we test state
- * and DOM mutations only.
+ * Covers: toggle front/side mapping, preview overlay, WYSIWYG export
+ * (display toggles control export), and button label refreshes.
+ * Canvas rendering is mocked — we test state and DOM mutations only.
  */
 const { loadCircuitScript } = require('./helpers')
 
@@ -54,9 +54,6 @@ beforeAll(() => {
     <button id="toggleFrontSideBtn">Front/Side Mapping: Standard</button>
     <button id="toggleWallsBtn">Hide Walls</button>
     <button id="toggleDotsBtn">Hide Dotted Grid</button>
-    <button id="toggleExportDotsBtn">Export Dots: On</button>
-    <button id="toggleExportWallsBtn">Export Walls: On</button>
-    <button id="toggleExportDirectionLabelsBtn">Export Front/Side Labels: On</button>
     <button id="downloadIsoFromPreviewBtn">Download Iso PNG</button>
     <button id="downloadViewsFromPreviewBtn">Download Views PNG</button>
 
@@ -72,28 +69,26 @@ beforeAll(() => {
   `
 })
 
-let state, toggleFrontSideBtn, previewOverlay, previewExportsBtn, closePreviewBtn,
-  toggleExportDotsBtn, toggleExportWallsBtn, toggleExportDirectionLabelsBtn
+let state, toggleFrontSideBtn, toggleWallsBtn, toggleDotsBtn, previewOverlay,
+  previewExportsBtn, closePreviewBtn
 
 beforeAll(() => {
   ;({
     state,
     toggleFrontSideBtn,
+    toggleWallsBtn,
+    toggleDotsBtn,
     previewOverlay,
     previewExportsBtn,
     closePreviewBtn,
-    toggleExportDotsBtn,
-    toggleExportWallsBtn,
-    toggleExportDirectionLabelsBtn,
   } = loadCircuitScript('isometric-cube-generator.html', [
     'state',
     'toggleFrontSideBtn',
+    'toggleWallsBtn',
+    'toggleDotsBtn',
     'previewOverlay',
     'previewExportsBtn',
     'closePreviewBtn',
-    'toggleExportDotsBtn',
-    'toggleExportWallsBtn',
-    'toggleExportDirectionLabelsBtn',
   ]))
 })
 
@@ -102,16 +97,18 @@ describe('initial state', () => {
     expect(state.swapFrontSide).toBe(false)
   })
 
-  test('exportDots defaults to true', () => {
-    expect(state.exportDots).toBe(true)
+  test('showDots defaults to true', () => {
+    expect(state.showDots).toBe(true)
   })
 
-  test('exportWalls defaults to true', () => {
-    expect(state.exportWalls).toBe(true)
+  test('showWalls defaults to true', () => {
+    expect(state.showWalls).toBe(true)
   })
 
-  test('exportDirectionLabels defaults to true', () => {
-    expect(state.exportDirectionLabels).toBe(true)
+  test('no separate export state properties exist', () => {
+    expect(state.exportDots).toBeUndefined()
+    expect(state.exportWalls).toBeUndefined()
+    expect(state.exportDirectionLabels).toBeUndefined()
   })
 
   test('preview overlay is closed initially', () => {
@@ -158,36 +155,32 @@ describe('preview overlay', () => {
   })
 })
 
-describe('export settings toggles', () => {
-  test('toggleExportDotsBtn flips exportDots', () => {
-    const before = state.exportDots
-    toggleExportDotsBtn.click()
-    expect(state.exportDots).toBe(!before)
-    toggleExportDotsBtn.click() // restore
-    expect(state.exportDots).toBe(before)
+describe('WYSIWYG display toggles', () => {
+  test('toggleDotsBtn flips showDots', () => {
+    const before = state.showDots
+    toggleDotsBtn.click()
+    expect(state.showDots).toBe(!before)
+    toggleDotsBtn.click() // restore
+    expect(state.showDots).toBe(before)
   })
 
-  test('toggleExportWallsBtn flips exportWalls', () => {
-    const before = state.exportWalls
-    toggleExportWallsBtn.click()
-    expect(state.exportWalls).toBe(!before)
-    toggleExportWallsBtn.click() // restore
-    expect(state.exportWalls).toBe(before)
+  test('toggleWallsBtn flips showWalls', () => {
+    const before = state.showWalls
+    toggleWallsBtn.click()
+    expect(state.showWalls).toBe(!before)
+    toggleWallsBtn.click() // restore
+    expect(state.showWalls).toBe(before)
   })
 
-  test('toggleExportDirectionLabelsBtn flips exportDirectionLabels', () => {
-    const before = state.exportDirectionLabels
-    toggleExportDirectionLabelsBtn.click()
-    expect(state.exportDirectionLabels).toBe(!before)
-    toggleExportDirectionLabelsBtn.click() // restore
-    expect(state.exportDirectionLabels).toBe(before)
+  test('dots button label reflects state', () => {
+    toggleDotsBtn.click()
+    expect(toggleDotsBtn.textContent).toBe(state.showDots ? 'Hide Dotted Grid' : 'Show Dotted Grid')
+    toggleDotsBtn.click() // restore
   })
 
-  test('export dots button label reflects state', () => {
-    toggleExportDotsBtn.click()
-    const label = toggleExportDotsBtn.textContent
-    expect(label).toMatch(/Export Dots: (On|Off)/)
-    expect(label).toBe(`Export Dots: ${state.exportDots ? 'On' : 'Off'}`)
-    toggleExportDotsBtn.click() // restore
+  test('walls button label reflects state', () => {
+    toggleWallsBtn.click()
+    expect(toggleWallsBtn.textContent).toBe(state.showWalls ? 'Hide Walls' : 'Show Walls')
+    toggleWallsBtn.click() // restore
   })
 })
