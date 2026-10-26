@@ -129,3 +129,7 @@ public/
 ---
 
 Created by Julienne, supported by [string.sg](https://string.sg)
+
+## Shared footer
+
+Generated from [String-sg/string-footer](https://github.com/String-sg/string-footer). The manifest records the source, variant, contributor credits and digest. See upstream for updates.
