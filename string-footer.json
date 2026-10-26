@@ -1,0 +1,13 @@
+{
+  "version": "1.0.1",
+  "source": "https://github.com/String-sg/string-footer",
+  "sha256": "b0604e44685b584efaa585da0fdac0e5895c3261e348a30e313df48829393911",
+  "product": "diagrams",
+  "variant": "compact",
+  "credits": [
+    {
+      "label": "Created by",
+      "name": "Julienne"
+    }
+  ]
+}
