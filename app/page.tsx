@@ -1,3 +1,4 @@
+import StringFooter from '@/components/string-footer/StringFooter'
 import Link from 'next/link'
 
 const tools = [
@@ -35,7 +36,8 @@ const tools = [
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gray-50 px-6 py-16">
+    <>
+    <main className="bg-gray-50 px-6 py-16">
       <div className="max-w-2xl mx-auto">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Diagram Tools</h1>
         <p className="text-gray-500 mb-10">Teaching tools for creating clean, exportable diagrams.</p>
@@ -56,13 +58,10 @@ export default function Home() {
             </Link>
           ))}
         </div>
-        <footer className="mt-16 text-xs text-gray-400">
-          Created by Julienne, supported by{' '}
-          <a href="https://string.sg" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-600">
-            string.sg
-          </a>
-        </footer>
+
       </div>
     </main>
+    <StringFooter />
+    </>
   )
 }

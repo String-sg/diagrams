@@ -3,7 +3,7 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com${process.env.NODE_ENV === 'development' ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.google-analytics.com https://www.googletagmanager.com",
-  "connect-src 'self' https://*.google-analytics.com https://www.googletagmanager.com",
+  "connect-src 'self' https://id.string.sg https://*.google-analytics.com https://www.googletagmanager.com",
   "font-src 'self'",
   "frame-src 'self'",
   "frame-ancestors 'self'",
