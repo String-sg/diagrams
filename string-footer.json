@@ -1,14 +1,15 @@
 {
   "version": "1.1.0",
   "source": "https://github.com/String-sg/string-footer",
-  "sha256": "6ea7641ebd7c4e109c68b092230833009040e7d565dfcd887212441d0b37ca7a",
+  "sha256": "2c6fd0dd6b7e6ac35624fe316cb431a8c6a80be359eccc9a7da54333959c4796",
   "product": "diagrams",
   "variant": "compact",
   "credits": [
     {
       "label": "Created by",
       "name": "Julienne",
-      "creation": "diagrams"
+      "creation": "diagrams",
+      "url": "https://id.string.sg/u/jtan"
     }
   ]
 }
