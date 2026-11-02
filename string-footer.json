@@ -1,13 +1,14 @@
 {
-  "version": "1.0.1",
+  "version": "1.1.0",
   "source": "https://github.com/String-sg/string-footer",
-  "sha256": "b0604e44685b584efaa585da0fdac0e5895c3261e348a30e313df48829393911",
+  "sha256": "6ea7641ebd7c4e109c68b092230833009040e7d565dfcd887212441d0b37ca7a",
   "product": "diagrams",
   "variant": "compact",
   "credits": [
     {
       "label": "Created by",
-      "name": "Julienne"
+      "name": "Julienne",
+      "creation": "diagrams"
     }
   ]
 }
