@@ -29,19 +29,23 @@ describe('release guardrails', () => {
     expect(vercel.git.deploymentEnabled.main).toBe(false)
   })
 
-  it('uses a push trigger rather than a scheduled deployment', () => {
+  it('uses change triggers rather than a scheduled deployment', () => {
     const workflow = fs.readFileSync(
       path.join(ROOT, '.github/workflows/julienne-deploy.yml'),
       'utf8'
     )
 
     expect(workflow).toMatch(/^  push:/m)
+    expect(workflow).toMatch(/^  pull_request:/m)
     expect(workflow).not.toMatch(/^  schedule:/m)
+    expect(workflow).toContain("'seed dispersal diagram v*.html'")
     expect(workflow).toContain('npm run sync:check')
     expect(workflow).toContain('npm run test:ci')
     expect(workflow).toContain('npm run security:audit')
     expect(workflow).toContain('semgrep scan')
     expect(workflow).toContain('github/codeql-action/analyze@v4')
     expect(workflow).toContain('vercel deploy --prebuilt --prod')
+    expect(workflow).toContain("if: github.event_name != 'pull_request'")
+    expect(workflow).not.toContain('--token="$VERCEL_TOKEN"')
   })
 })
