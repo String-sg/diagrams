@@ -52,6 +52,6 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 
 ### SEC-007 — Development glob stack advisory (Low operational risk, open)
 
-- Evidence: a full `npm audit` including development dependencies reports one `picomatch` ReDoS advisory cascading through Jest and Tailwind (43 high dependency paths and one moderate PostCSS parser path). `npm audit --omit=dev` reports zero production vulnerabilities.
+- Evidence: a full `npm audit` including development dependencies reports one `picomatch` ReDoS advisory cascading through Jest and Tailwind (43 high dependency paths). The compatible `postcss-selector-parser` update is applied, and `npm audit --omit=dev` reports zero production vulnerabilities.
 - Impact: these packages run during local development and CI; they are not included in the production application. The repository uses fixed test and build patterns rather than accepting glob expressions from application users.
 - Recommended follow-up: migrate Jest 29 to 30 and Tailwind 3 to 4 in a separate compatibility-tested change. npm currently recommends those major upgrades rather than a non-breaking remediation.
