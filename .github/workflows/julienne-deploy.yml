@@ -8,6 +8,26 @@ on:
       - 'circuit_diagram_creatorv*.html'
       - 'circuit diagram secjc v*.html'
       - 'cube_solid_generator_refined_v*.html'
+      - 'seed dispersal diagram v*.html'
+      - 'app/**'
+      - 'lib/**'
+      - 'public/**'
+      - 'scripts/**'
+      - '__tests__/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'next.config.mjs'
+      - 'vercel.json'
+      - '.semgrep.yml'
+      - '.github/workflows/julienne-deploy.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'circuit_diagram_creatorv*.html'
+      - 'circuit diagram secjc v*.html'
+      - 'cube_solid_generator_refined_v*.html'
+      - 'seed dispersal diagram v*.html'
       - 'app/**'
       - 'lib/**'
       - 'public/**'
@@ -96,11 +116,11 @@ jobs:
   deploy:
     name: Deploy verified build to production
     needs: verify
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     env:
       VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
     steps:
       - name: Check out the verified source
         uses: actions/checkout@v6
@@ -121,16 +141,22 @@ jobs:
         run: npm install --global vercel@58.4.4
 
       - name: Pull production configuration
-        run: vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+        run: vercel pull --yes --environment=production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Build with Vercel
-        run: vercel build --prod --token="$VERCEL_TOKEN"
+        run: vercel build --prod
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy the verified prebuilt output
         id: deploy
         shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          deployment_url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+          deployment_url="$(vercel deploy --prebuilt --prod)"
           echo "url=$deployment_url" >> "$GITHUB_OUTPUT"
           echo "### Production deployment" >> "$GITHUB_STEP_SUMMARY"
           echo "$deployment_url" >> "$GITHUB_STEP_SUMMARY"

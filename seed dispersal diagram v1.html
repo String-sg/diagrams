@@ -5732,7 +5732,7 @@
       <div class="answer-grid">
         ${state.creator.plants.map((plant, i) => `
           <section class="answer-card">
-            <h4 class="answer-card-title">${shapeGlyph(plant.shape)} ${peerPlantLabel(i, plant)}</h4>
+            <h4 class="answer-card-title">${shapeGlyph(plant.shape)} ${escapeHtml(peerPlantLabel(i, plant))}</h4>
             <div class="answer-fields">
               <div class="answer-field">
                 <label for="peerMethod${i}">Dispersal method</label>

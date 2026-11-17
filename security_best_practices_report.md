@@ -2,14 +2,14 @@
 
 ## Executive summary
 
-The application and its release path were reviewed for dependency, Next.js, React, API-input, browser-policy, and CI/CD risks. Four findings were remediated. The production dependency tree now reports zero known vulnerabilities, dangerous GA configuration interpolation was removed, API event input is strictly validated, and browser security headers plus two SAST gates are enforced. One low-severity hardening limitation remains because the standalone HTML tools currently require inline scripts and styles.
+The application and its release path were reviewed for dependency, Next.js, React, API-input, browser-policy, and CI/CD risks. Five findings were remediated. The production dependency tree now reports zero known vulnerabilities, dangerous GA configuration interpolation was removed, API event input is strictly validated, custom seed labels are escaped before HTML insertion, and browser security headers plus two SAST gates are enforced. Two development-only hardening items remain.
 
 ## Resolved findings
 
 ### SEC-001 — Vulnerable runtime and transitive dependencies (High, resolved)
 
 - Evidence before remediation: `npm audit --json` reported 9 known vulnerabilities (7 high, 2 low), including the installed Next.js and transitive build/runtime packages.
-- Remediation: Next.js and its Google integration are pinned to `15.5.22`; PostCSS and vulnerable transitive packages are pinned to patched releases in `package.json:21-50` and `package-lock.json`.
+- Remediation: Next.js and its Google integration are pinned to `15.5.28`; PostCSS and vulnerable transitive packages are pinned to patched releases in `package.json` and `package-lock.json`.
 - Verification: `npm ci` and `npm run security:audit` both complete with `found 0 vulnerabilities`.
 
 ### SEC-002 — Unvalidated analytics ID interpolated into executable JavaScript (Medium, resolved)
@@ -30,9 +30,15 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 - Remediation: `next.config.mjs:1-39` applies a Content Security Policy, same-origin framing, MIME sniffing protection, a restrictive permissions policy, and a strict referrer policy to every route. Same-origin framing is intentionally retained because the application embeds its own tools in iframes.
 - Verification: `__tests__/release-guardrails.test.js` asserts the complete header contract; production response headers are also checked after deployment.
 
+### SEC-006 — Custom seed label inserted into HTML without escaping (High, resolved)
+
+- Evidence before remediation: `renderCreatorPeerAnswers()` interpolated the user-editable `peerPlantLabel()` value into an `innerHTML` template.
+- Remediation: `seed dispersal diagram v1.html` now applies the existing `escapeHtml()` helper at that HTML boundary; the generated public tool is synchronised from the canonical source.
+- Verification: `__tests__/canvas/seed-dispersal.test.js` prevents the unsafe interpolation from returning, the full 174-test suite passes, and the pinned Semgrep gate reports zero findings.
+
 ## Continuous security gates
 
-- `.github/workflows/julienne-deploy.yml:47-94` runs CodeQL, a pinned Semgrep release with local high-signal rules plus the Node.js ruleset, `npm audit`, all specifications, and a production build before deployment.
+- `.github/workflows/julienne-deploy.yml` runs CodeQL, a pinned Semgrep release with local high-signal rules plus the Node.js ruleset, `npm audit`, all specifications, and a production build before deployment. It runs for relevant pull requests and direct pushes; only verified direct pushes to `main` can deploy.
 - `.semgrep.yml` blocks `eval`, the `Function` constructor, and `javascript:` URLs outside excluded test/archive paths.
 - `vercel.json:3-6` disables unchecked direct Git deployment from `main`; only the verified prebuilt output is promoted.
 
@@ -42,4 +48,10 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 
 - Evidence: the canonical standalone HTML tools contain their application CSS and JavaScript inline, so `next.config.mjs` must currently include `'unsafe-inline'` for `script-src` and `style-src`.
 - Impact: the CSP still restricts origins, objects, framing, forms, and connections, but it cannot fully mitigate a future HTML-injection bug inside these tools.
-- Recommended follow-up: move each tool's inline JavaScript and CSS to same-origin static assets, then remove both `'unsafe-inline'` allowances or adopt per-response nonces/hashes. Current scans found no user-controlled path into the static `innerHTML`/SVG templates reviewed.
+- Recommended follow-up: move each tool's inline JavaScript and CSS to same-origin static assets, then remove both `'unsafe-inline'` allowances or adopt per-response nonces/hashes. The identified user-controlled custom-label path is now escaped at its HTML boundary.
+
+### SEC-007 — Development glob stack advisory (Low operational risk, open)
+
+- Evidence: a full `npm audit` including development dependencies reports one `picomatch` ReDoS advisory cascading through Jest and Tailwind (43 high dependency paths and one moderate PostCSS parser path). `npm audit --omit=dev` reports zero production vulnerabilities.
+- Impact: these packages run during local development and CI; they are not included in the production application. The repository uses fixed test and build patterns rather than accepting glob expressions from application users.
+- Recommended follow-up: migrate Jest 29 to 30 and Tailwind 3 to 4 in a separate compatibility-tested change. npm currently recommends those major upgrades rather than a non-breaking remediation.

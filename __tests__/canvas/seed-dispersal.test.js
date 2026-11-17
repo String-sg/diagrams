@@ -75,6 +75,11 @@ describe('Seed Dispersal Diagram — HTML structure', () => {
   it('includes the tracker script hook', () => {
     expect(html).toContain('<script src="/tracker.js"></script>')
   })
+
+  it('escapes custom plant labels before inserting peer answer markup', () => {
+    expect(html).toContain('${escapeHtml(peerPlantLabel(i, plant))}')
+    expect(html).not.toContain('${peerPlantLabel(i, plant)}</h4>')
+  })
 })
 
 // ---------------------------------------------------------------------------
