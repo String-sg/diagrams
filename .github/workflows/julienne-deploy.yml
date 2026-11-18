@@ -165,21 +165,22 @@ jobs:
         shell: bash
         env:
           DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           base_url="${DEPLOYMENT_URL%/}"
 
-          home_html="$(curl --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors "$base_url/")"
+          home_html="$(vercel curl "$base_url/" --yes -- --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors)"
           grep -Fq 'Created by Julienne, supported by' <<< "$home_html"
           grep -Fq 'href="https://string.sg"' <<< "$home_html"
 
-          seed_html="$(curl --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors "$base_url/tools/seed-dispersal-diagram.html")"
+          seed_html="$(vercel curl "$base_url/tools/seed-dispersal-diagram.html" --yes -- --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors)"
           grep -Fq '${escapeHtml(peerPlantLabel(i, plant))}' <<< "$seed_html"
           if grep -Fq '${peerPlantLabel(i, plant)}</h4>' <<< "$seed_html"; then
             echo 'Unsafe custom-label interpolation is present in the deployed seed tool.' >&2
             exit 1
           fi
 
-          headers="$(curl --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors --head "$base_url/")"
+          headers="$(vercel curl "$base_url/" --yes -- --fail --silent --show-error --retry 5 --retry-delay 3 --retry-all-errors --head)"
           grep -iq '^content-security-policy:' <<< "$headers"
           grep -iq '^strict-transport-security:' <<< "$headers"
           grep -iq '^x-content-type-options: nosniff' <<< "$headers"
