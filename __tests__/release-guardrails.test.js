@@ -46,6 +46,7 @@ describe('release guardrails', () => {
     expect(workflow).toContain('github/codeql-action/analyze@v4')
     expect(workflow).toContain('vercel deploy --prebuilt --prod')
     expect(workflow).toContain('Smoke-test the deployed production artifact')
+    expect(workflow).toContain('vercel curl "$base_url/" --yes')
     expect(workflow).toContain('Created by Julienne, supported by')
     expect(workflow).toContain('href="https://string.sg"')
     expect(workflow).toContain("'${escapeHtml(peerPlantLabel(i, plant))}'")
