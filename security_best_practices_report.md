@@ -38,7 +38,7 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 
 ## Continuous security gates
 
-- `.github/workflows/julienne-deploy.yml` runs CodeQL, a pinned Semgrep release with local high-signal rules plus the Node.js ruleset, `npm audit`, all specifications, and a production build before deployment. It runs for relevant pull requests and direct pushes; only verified direct pushes to `main` can deploy.
+- `.github/workflows/julienne-deploy.yml` runs CodeQL, a pinned Semgrep release with local high-signal rules plus the Node.js ruleset, `npm audit`, all specifications, and a production build before deployment. It runs for relevant pull requests and direct pushes; only verified direct pushes to `main` can deploy. The deploy job then smoke-tests the exact deployment URL for the permanent footer/link, safe seed-label rendering, and core security headers.
 - `.semgrep.yml` blocks `eval`, the `Function` constructor, and `javascript:` URLs outside excluded test/archive paths.
 - `vercel.json:3-6` disables unchecked direct Git deployment from `main`; only the verified prebuilt output is promoted.
 
