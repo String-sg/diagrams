@@ -15,13 +15,13 @@
     "test:watch": "jest --watch",
     "sync:tools": "node scripts/sync-julienne-tools.js --write",
     "sync:check": "node scripts/sync-julienne-tools.js --check",
-    "security:audit": "npm audit --omit=dev --audit-level=high",
+    "security:audit": "npm audit --audit-level=high",
     "verify": "npm run sync:tools && npm run sync:check && npm run test:ci && npm run security:audit && npm run build"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
-    "@next/third-parties": "15.5.28",
-    "next": "15.5.28",
+    "@next/third-parties": "15.5.29",
+    "next": "15.5.29",
     "react": "^18.3.0",
     "react-dom": "^18.3.0"
   },
