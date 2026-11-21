@@ -29,6 +29,12 @@ describe('release guardrails', () => {
     expect(vercel.git.deploymentEnabled.main).toBe(false)
   })
 
+  it('audits production and development dependencies', () => {
+    const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'))
+
+    expect(packageJson.scripts['security:audit']).toBe('npm audit --audit-level=high')
+  })
+
   it('uses change triggers rather than a scheduled deployment', () => {
     const workflow = fs.readFileSync(
       path.join(ROOT, '.github/workflows/julienne-deploy.yml'),

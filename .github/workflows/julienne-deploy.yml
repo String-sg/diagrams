@@ -81,7 +81,7 @@ jobs:
       - name: Run executable specifications
         run: npm run test:ci
 
-      - name: Audit production and build dependencies
+      - name: Audit production and development dependencies
         run: npm run security:audit
 
       - name: Set up Python for Semgrep

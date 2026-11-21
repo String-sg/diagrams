@@ -2,14 +2,14 @@
 
 ## Executive summary
 
-The application and its release path were reviewed for dependency, Next.js, React, API-input, browser-policy, and CI/CD risks. Five findings were remediated. The production dependency tree now reports zero known vulnerabilities, dangerous GA configuration interpolation was removed, API event input is strictly validated, custom seed labels are escaped before HTML insertion, and browser security headers plus two SAST gates are enforced. Two development-only hardening items remain.
+The application and its release path were reviewed for dependency, Next.js, React, API-input, browser-policy, and CI/CD risks. Six findings were remediated. The complete production and development dependency tree now reports zero known vulnerabilities, dangerous GA configuration interpolation was removed, API event input is strictly validated, custom seed labels are escaped before HTML insertion, and browser security headers plus two SAST gates are enforced. One low-risk CSP hardening item remains.
 
 ## Resolved findings
 
 ### SEC-001 — Vulnerable runtime and transitive dependencies (High, resolved)
 
 - Evidence before remediation: `npm audit --json` reported 9 known vulnerabilities (7 high, 2 low), including the installed Next.js and transitive build/runtime packages.
-- Remediation: Next.js and its Google integration are pinned to `15.5.28`; PostCSS and vulnerable transitive packages are pinned to patched releases in `package.json` and `package-lock.json`.
+- Remediation: Next.js and its Google integration are pinned to `15.5.29`; PostCSS and vulnerable transitive packages are pinned to patched releases in `package.json` and `package-lock.json`.
 - Verification: `npm ci` and `npm run security:audit` both complete with `found 0 vulnerabilities`.
 
 ### SEC-002 — Unvalidated analytics ID interpolated into executable JavaScript (Medium, resolved)
@@ -34,7 +34,13 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 
 - Evidence before remediation: `renderCreatorPeerAnswers()` interpolated the user-editable `peerPlantLabel()` value into an `innerHTML` template.
 - Remediation: `seed dispersal diagram v1.html` now applies the existing `escapeHtml()` helper at that HTML boundary; the generated public tool is synchronised from the canonical source.
-- Verification: `__tests__/canvas/seed-dispersal.test.js` prevents the unsafe interpolation from returning, the full 174-test suite passes, and the pinned Semgrep gate reports zero findings.
+- Verification: `__tests__/canvas/seed-dispersal.test.js` prevents the unsafe interpolation from returning, the full 175-test suite passes, and the pinned Semgrep gate reports zero findings.
+
+### SEC-007 — Development glob stack advisory (Withdrawn, resolved)
+
+- Evidence: `GHSA-fc5q-39xc-vjpf` previously expanded one `picomatch` report into 43 Jest and Tailwind dependency paths. GitHub withdrew the advisory on 18 November 2026 because the reported behavior is not a security issue.
+- Remediation: the unnecessary Jest 30 and Tailwind 4 migrations were not applied. The release gate now audits both production and development dependencies so future high-severity development advisories cannot be hidden by `--omit=dev`.
+- Verification: GitHub reports the advisory as withdrawn, and a full `npm audit` reports zero vulnerabilities after the Next.js `15.5.29` patch.
 
 ## Continuous security gates
 
@@ -49,9 +55,3 @@ The application and its release path were reviewed for dependency, Next.js, Reac
 - Evidence: the canonical standalone HTML tools contain their application CSS and JavaScript inline, so `next.config.mjs` must currently include `'unsafe-inline'` for `script-src` and `style-src`.
 - Impact: the CSP still restricts origins, objects, framing, forms, and connections, but it cannot fully mitigate a future HTML-injection bug inside these tools.
 - Recommended follow-up: move each tool's inline JavaScript and CSS to same-origin static assets, then remove both `'unsafe-inline'` allowances or adopt per-response nonces/hashes. The identified user-controlled custom-label path is now escaped at its HTML boundary.
-
-### SEC-007 — Development glob stack advisory (Low operational risk, open)
-
-- Evidence: a full `npm audit` including development dependencies reports one `picomatch` ReDoS advisory cascading through Jest and Tailwind (43 high dependency paths). The compatible `postcss-selector-parser` update is applied, and `npm audit --omit=dev` reports zero production vulnerabilities.
-- Impact: these packages run during local development and CI; they are not included in the production application. The repository uses fixed test and build patterns rather than accepting glob expressions from application users.
-- Recommended follow-up: migrate Jest 29 to 30 and Tailwind 3 to 4 in a separate compatibility-tested change. npm currently recommends those major upgrades rather than a non-breaking remediation.
